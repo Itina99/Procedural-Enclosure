@@ -17,11 +17,13 @@ class Mesh {
 public:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
+    unsigned int VAO;
 
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
-    void render();
+    void render() const;
+    auto getHeight(float x, float z) const -> float;
 private:
-    unsigned int VAO, VBO, EBO;
+    unsigned int VBO, EBO;
     void setupMesh();
 };
 
