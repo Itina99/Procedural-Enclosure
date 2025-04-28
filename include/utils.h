@@ -4,11 +4,14 @@
 
 #ifndef UTILS_H
 #define UTILS_H
-
+#include <../lib/stb_image.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <cassert>
+#include <vector>
+
+#include "mesh.h"
 
 void error_callback(int error, const char* description);
 
@@ -24,6 +27,10 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 
 void scroll_callback(GLFWwindow * window, double xoffset, double yoffset);
+
+unsigned int loadTexture(char const * path);
+
+std::vector<Texture> chooseTextures(const int biomeId);
 
 
 #endif //UTILS_H

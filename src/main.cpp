@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 #include "utils.h"
 #include "camera.h"
@@ -79,8 +80,11 @@ int main() {
 
     std::cout << "Biome ID: " << biomeSettings.id << std::endl;
 
+    const std::vector<Texture> textures = chooseTextures(biomeSettings.id);
+
+
     // Create a Noise map
-    const Mesh elevation = noiseGen.generateMesh(20, 20);
+    const Mesh elevation = noiseGen.generateMesh(20, 20, textures);
     // Create a Poisson map
     std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 1.0f, 20, biomeSettings.id, biomeSettings.amplitude);
     std::cout << "Generated " << treePos.size() << " points" << std::endl;
@@ -111,7 +115,10 @@ int main() {
             4, 7, 0,
             4, 0, 3
     };
-    const Mesh cube(vertices, indices);
+
+
+    const Mesh cube(vertices, indices, {});
+
 
     // ✅ Check for OpenGL errors BEFORE entering the render loop
     GLenum err;
@@ -147,7 +154,16 @@ int main() {
         shader.setMat4("model", model); // identity for terrain
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
-        elevation.render();
+        shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        shader.setVec3("viewPos", camera.position);
+        shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+        shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+        shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+        shader.setInt("material.diffuse", 0);
+        shader.setInt("material.specular", 1);
+        shader.setFloat("material.shininess", 8.0f);
+
+        elevation.render(shader);
 
         // Draw the trees
         cubeShader.use(); // NOW switch to cube shader
@@ -160,7 +176,7 @@ int main() {
             model = glm::translate(model, glm::vec3(pos.x, y, pos.y));
             model = glm::scale(model, glm::vec3(0.2f));
             cubeShader.setMat4("model", model);
-            cube.render();
+            cube.render(cubeShader);
         }
 
         // events and swap buffers

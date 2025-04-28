@@ -23,7 +23,8 @@ add_executable(${PROJECT_NAME} src/main.cpp
         include/NoiseGenerator.h
         src/NoiseGenerator.cpp
         include/PoissonGenerator.h
-        src/PoissonGenerator.cpp)
+        src/PoissonGenerator.cpp
+        src/stb_image.cpp)
 
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)

@@ -56,7 +56,7 @@ public:
 
     float generateNoise(double x, double y) const;
 
-    Mesh generateMesh(int width, int height) const;
+    Mesh generateMesh(int width, int height, const std::vector<Texture> &textures) const;
 };
 
 #endif // NOISE_GENERATOR_H
