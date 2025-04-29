@@ -1,5 +1,16 @@
 #version 460
 
-void main() {
+layout(location = 0) in vec3 vertexPosition;
+layout(location = 1) in vec3 normals;
+layout(location = 2) in vec2 texCoords;
 
+out vec2 tCoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main() {
+    tCoords = texCoords;
+    gl_Position = projection * view * model * vec4(vertexPosition, 1.0);
 }

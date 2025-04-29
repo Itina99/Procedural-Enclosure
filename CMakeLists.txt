@@ -24,7 +24,16 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/NoiseGenerator.cpp
         include/PoissonGenerator.h
         src/PoissonGenerator.cpp
-        src/stb_image.cpp)
+        src/stb_image.cpp
+        src/lindenmayer.cpp
+        include/lindenmayer.h
+        include/abstract_builder.h
+        src/branch_builder.cpp
+        include/branch_builder.h
+        src/leaf_builder.cpp
+        include/leaf_builder.h
+        src/interpreter.cpp
+        include/interpreter.h)
 
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)

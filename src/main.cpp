@@ -3,6 +3,9 @@
 //
 #include <iostream>
 #include <cstdio>
+#include <map>
+#include <memory>
+#include <set>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -10,8 +13,12 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
+#include "branch_builder.h"
 #include "utils.h"
 #include "camera.h"
+#include "interpreter.h"
+#include "leaf_builder.h"
+#include "lindenmayer.h"
 #include "NoiseGenerator.h"
 #include "shader.h"
 #include "PoissonGenerator.h"
@@ -38,7 +45,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "ProvaOpenGL", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "PreceduralEnclosures", nullptr, nullptr);
     if (window == nullptr) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -72,7 +79,7 @@ int main() {
 
 
     // Create a Noise generator
-    const BiomeSettings biomeSettings = noiseGen.biomePresets["Hills"];
+    const BiomeSettings biomeSettings = noiseGen.biomePresets["Mountains"];
     noiseGen.setBiome(biomeSettings);
     shader.use();
     shader.setInt("biomeId", biomeSettings.id);
@@ -86,7 +93,7 @@ int main() {
     // Create a Noise map
     const Mesh elevation = noiseGen.generateMesh(20, 20, textures);
     // Create a Poisson map
-    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 1.0f, 20, biomeSettings.id, biomeSettings.amplitude);
+    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 6.0f, 20, biomeSettings.id, biomeSettings.amplitude);
     std::cout << "Generated " << treePos.size() << " points" << std::endl;
 
     //Create a mesh cube
@@ -119,8 +126,30 @@ int main() {
 
     const Mesh cube(vertices, indices, {});
 
+    // L-System tree creation
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // ✅ Check for OpenGL errors BEFORE entering the render loop
+    Shader t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
+    std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
+    std::map<char, std::vector<std::string>> production_rules ={
+        {'P', std::vector<std::string> {"[&F[&&L]P]/////’[&F[&&L]P]///////’[&F[&&L]P]"}},
+        {'F', std::vector<std::string> {"X/////F", "F"}},
+        {'X', std::vector<std::string> {"F"}}
+    };
+
+    auto l = Lindenmayer(characters, production_rules);
+
+    auto result = l.generate("P", 7, true);
+
+    std::shared_ptr<Branch> sBranch = std::make_shared<Branch>(6);
+    std::shared_ptr<Leaf> sLeaf = std::make_shared<Leaf>();
+    Interpreter turtle = Interpreter(sBranch, sLeaf, 22.5f);
+    std::vector<Mesh> meshes;
+    std::vector<glm::mat4> transforms;
+    turtle.read_string(result, meshes, transforms);
+
+    // Check for OpenGL errors BEFORE entering the render loop
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
         std::cerr << "OpenGL Error: " << err << std::endl;
@@ -166,17 +195,31 @@ int main() {
         elevation.render(shader);
 
         // Draw the trees
-        cubeShader.use(); // NOW switch to cube shader
-        cubeShader.setMat4("view", view);
-        cubeShader.setMat4("projection", projection);
+        //cubeShader.use(); // NOW switch to cube shader
+        //cubeShader.setMat4("view", view);
+        //cubeShader.setMat4("projection", projection);
+
+        //for (const auto& pos : treePos) {
+        //    const float y = elevation.getHeight(pos.x, pos.y);
+        //    model = glm::mat4(1.0f);
+        //    model = glm::translate(model, glm::vec3(pos.x, y, pos.y));
+        //    model = glm::scale(model, glm::vec3(0.2f));
+        //    cubeShader.setMat4("model", model);
+        //    cube.render(cubeShader);
+        //}
+        t_shader.use();
+        t_shader.setMat4("view", view);
+        t_shader.setMat4("projection", projection);
 
         for (const auto& pos : treePos) {
             const float y = elevation.getHeight(pos.x, pos.y);
             model = glm::mat4(1.0f);
             model = glm::translate(model, glm::vec3(pos.x, y, pos.y));
             model = glm::scale(model, glm::vec3(0.2f));
-            cubeShader.setMat4("model", model);
-            cube.render(cubeShader);
+            for (int i = 0; i < meshes.size(); i++) {
+                t_shader.setMat4("model", model * transforms[i]);
+                meshes[i].render(t_shader);
+            }
         }
 
         // events and swap buffers

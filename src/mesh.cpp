@@ -46,7 +46,13 @@ void Mesh::render(const Shader &shader) const {
     }
 
     glBindVertexArray(this->VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    if (indices.size() > 0) {
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    }
+    else {
+        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+    }
+
     glBindVertexArray(0);
 
     glActiveTexture(GL_TEXTURE0);

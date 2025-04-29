@@ -8,6 +8,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 #include "mesh.h"
 #include "../lib/FastNoiseLite.h"

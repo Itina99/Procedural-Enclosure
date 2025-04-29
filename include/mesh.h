@@ -32,6 +32,7 @@ public:
     std::vector<Texture> textures;
     unsigned int VAO;
 
+    Mesh() = default;
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture>textures);
     void render(const Shader &shader) const;
     auto getHeight(float x, float z) const -> float;
