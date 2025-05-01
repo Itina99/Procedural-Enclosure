@@ -33,7 +33,9 @@ add_executable(${PROJECT_NAME} src/main.cpp
         src/leaf_builder.cpp
         include/leaf_builder.h
         src/interpreter.cpp
-        include/interpreter.h)
+        include/interpreter.h
+        src/tree.cpp
+        include/tree.h)
 
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)

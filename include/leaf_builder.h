@@ -10,15 +10,15 @@
 
 class Leaf : public Drawer{
 public:
-    Leaf(float size = 1.0f);
+    Leaf();
     ~Leaf() = default;
-    void build_leaf() override;
+    void build_leaf(float size) override;
     Mesh getResult() override;
 private:
     Mesh mesh;
-    float size;
     unsigned int tID;
 };
+
 
 
 

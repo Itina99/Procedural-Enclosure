@@ -6,13 +6,13 @@
 
 #include <utility>
 
-Interpreter::Interpreter(std::shared_ptr<Branch> branch, std::shared_ptr<Leaf> leaf, float angle, float radius, float length, float radius_decay, float length_decay) : radius(radius), length(length), radius_decay(radius_decay), length_decay(length_decay) {
+Interpreter::Interpreter(std::shared_ptr<Branch> branch, std::shared_ptr<Leaf> leaf, float angle, glm::vec3 position, float radius, float length, float radius_decay, float length_decay) : radius(radius), length(length), radius_decay(radius_decay), length_decay(length_decay) {
     this->builder_map['F'] = branch;
     this->builder_map['P'] = branch;
     this->builder_map['L'] = leaf;
 
     TurtleState s = TurtleState();
-    s.position = glm::vec3(0.0f);
+    s.position = position;
     s.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     s.forward = glm::vec3(0.0f, 1.0f, 0.0f);
     s.up = glm::vec3(0.0f, 0.0f,1.0f);
@@ -51,7 +51,7 @@ void Interpreter::read_string(const std::string &predicate, std::vector<Mesh>& m
                 translation = glm::translate(glm::mat4(1.0f), current.position);
                 rotation = glm::mat4_cast(current.orientation);
                 transforms.push_back(translation * rotation);
-                this->builder_map['L']->build_leaf();
+                this->builder_map['L']->build_leaf(1.0f);
                 meshes.push_back(this->builder_map['L']->getResult());
                 break;
             }
@@ -163,4 +163,12 @@ void Interpreter::read_string(const std::string &predicate, std::vector<Mesh>& m
 
         }
     }
+}
+
+void Interpreter::reset_interpreter(glm::vec3 position) {
+    this->state.position = position;
+    this->state.orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    this->state.forward = glm::vec3(0.0f, 1.0f, 0.0f);
+    this->state.up = glm::vec3(0.0f, 0.0f,1.0f);
+    this->state.right = glm::vec3(1.0f, 0.0f, 0.0f);
 }
