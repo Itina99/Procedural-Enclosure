@@ -75,11 +75,11 @@ int main() {
 
 
     auto shader = Shader("../shaders/noise.vert", "../shaders/noise.frag");
-    auto cubeShader = Shader("../shaders/cube.vert", "../shaders/cube.frag");
+    auto sunShader = Shader("../shaders/cube.vert", "../shaders/sunShader.frag");
 
 
     // Create a Noise generator
-    const BiomeSettings biomeSettings = noiseGen.biomePresets["Mountains"];
+    const BiomeSettings biomeSettings = noiseGen.biomePresets["Hills"];
     noiseGen.setBiome(biomeSettings);
     shader.use();
     shader.setInt("biomeId", biomeSettings.id);
@@ -93,7 +93,7 @@ int main() {
     // Create a Noise map
     const Mesh elevation = noiseGen.generateMesh(20, 20, textures);
     // Create a Poisson map
-    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 6.0f, 20, biomeSettings.id, biomeSettings.amplitude);
+    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 5.0f, 20, biomeSettings.id, biomeSettings.amplitude);
     std::cout << "Generated " << treePos.size() << " points" << std::endl;
 
     //Create a mesh cube
@@ -123,14 +123,13 @@ int main() {
             4, 0, 3
     };
 
-
-    const Mesh cube(vertices, indices, {});
+    const Mesh sun(vertices, indices, {});
 
     // L-System tree creation
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Shader t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
+    /*Shader t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
     std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
     std::map<char, std::vector<std::string>> production_rules ={
         {'P', std::vector<std::string> {"[&F[&&L]P]/////’[&F[&&L]P]///////’[&F[&&L]P]"}},
@@ -148,7 +147,7 @@ int main() {
     std::vector<Mesh> meshes;
     std::vector<glm::mat4> transforms;
     turtle.read_string(result, meshes, transforms);
-
+    */
     // Check for OpenGL errors BEFORE entering the render loop
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -183,14 +182,13 @@ int main() {
         shader.setMat4("model", model); // identity for terrain
         shader.setMat4("view", view);
         shader.setMat4("projection", projection);
-        shader.setVec3("dirLight.direction", -0.2f, -1.0f, -0.3f);
+        shader.setVec3("dirLight.direction", glm::vec3(-0.3f, -1.0f, -0.3f));
+        shader.setVec3("dirLight.ambient", glm::vec3(0.3f, 0.3f, 0.3f)); // era 0.2
+        shader.setVec3("dirLight.diffuse", glm::vec3(0.7f, 0.7f, 0.7f)); // era 0.5
+        shader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f)); // ok
         shader.setVec3("viewPos", camera.position);
-        shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-        shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-        shader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-        shader.setInt("material.diffuse", 0);
-        shader.setInt("material.specular", 1);
-        shader.setFloat("material.shininess", 8.0f);
+        shader.setFloat("time", static_cast<float>(glfwGetTime()));
+
 
         elevation.render(shader);
 
@@ -207,7 +205,7 @@ int main() {
         //    cubeShader.setMat4("model", model);
         //    cube.render(cubeShader);
         //}
-        t_shader.use();
+        /*t_shader.use();
         t_shader.setMat4("view", view);
         t_shader.setMat4("projection", projection);
 
@@ -220,7 +218,7 @@ int main() {
                 t_shader.setMat4("model", model * transforms[i]);
                 meshes[i].render(t_shader);
             }
-        }
+        }*/
 
         // events and swap buffers
         glfwSwapBuffers(window); // swaps color buffer used to render to

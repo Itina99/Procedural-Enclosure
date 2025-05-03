@@ -129,6 +129,9 @@ std::vector<Texture> chooseTextures(const int biomeId) {
             return {
                 {loadTexture("../textures/Rock/rocky_terrain_02_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/Sand/aerial_beach_01_diff_1k.png"), "texture_diffuse"},
+                {loadTexture("../textures/Waves/0012.png"), "texture_normal"},
+                {loadTexture("../textures/Waves/0071.png"), "texture_normal"},
+
 
             };
         default:
