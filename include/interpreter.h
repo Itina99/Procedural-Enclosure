@@ -31,10 +31,11 @@ struct TurtleState {
 
 class Interpreter {
 public:
-    Interpreter(std::shared_ptr<Branch> branch, std::shared_ptr<Leaf> leaf, float angle = 10.0f, float radius = 0.05f, float length = 1.0f, float radius_decay = 0.9f, float length_decay = 0.9f);
+    Interpreter(std::shared_ptr<Branch> branch, std::shared_ptr<Leaf> leaf, float angle = 10.0f, glm::vec3 position = glm::vec3(0.0f), float radius = 0.1f, float length = 1.0f, float radius_decay = 0.9f, float length_decay = 0.9f);
     ~Interpreter() = default;
 
     void read_string(const std::string & predicate, std::vector<Mesh>& meshes, std::vector<glm::mat4> & transforms);
+    void reset_interpreter(glm::vec3 position = glm::vec3(0.0f));
 private:
     std::map<const char, std::shared_ptr<Drawer>> builder_map;
     float radius, length;

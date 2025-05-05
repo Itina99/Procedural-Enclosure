@@ -10,7 +10,7 @@
 class Branch : public Drawer {
 public:
     Branch(unsigned int resolution = 8);
-    ~Branch() = default;
+    ~Branch() override = default;
     void build_branch(float height, float R, float r) override;
     Mesh getResult() override;
 

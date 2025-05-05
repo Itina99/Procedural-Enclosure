@@ -22,6 +22,7 @@
 #include "NoiseGenerator.h"
 #include "shader.h"
 #include "PoissonGenerator.h"
+#include "tree.h"
 
 // FPS related values
 float deltaTime = 0.0f;
@@ -44,6 +45,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    stbi_set_flip_vertically_on_load(true);
 
     GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "PreceduralEnclosures", nullptr, nullptr);
     if (window == nullptr) {
@@ -75,11 +77,11 @@ int main() {
 
 
     auto shader = Shader("../shaders/noise.vert", "../shaders/noise.frag");
-    auto sunShader = Shader("../shaders/cube.vert", "../shaders/sunShader.frag");
+    auto cubeShader = Shader("../shaders/cube.vert", "../shaders/cube.frag");
 
 
     // Create a Noise generator
-    const BiomeSettings biomeSettings = noiseGen.biomePresets["Hills"];
+    const BiomeSettings biomeSettings = noiseGen.biomePresets["Mountains"];
     noiseGen.setBiome(biomeSettings);
     shader.use();
     shader.setInt("biomeId", biomeSettings.id);
@@ -123,31 +125,40 @@ int main() {
             4, 0, 3
     };
 
-    const Mesh sun(vertices, indices, {});
+
+    const Mesh cube(vertices, indices, {});
 
     // L-System tree creation
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_CULL_FACE);
 
-    /*Shader t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
+    Shader t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
     std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
     std::map<char, std::vector<std::string>> production_rules ={
-        {'P', std::vector<std::string> {"[&F[&&L]P]/////’[&F[&&L]P]///////’[&F[&&L]P]"}},
-        {'F', std::vector<std::string> {"X/////F", "F"}},
+        {'P', std::vector<std::string> {"[&F[&&L]P[]F]/////[&F[&&L]P]///////[&F[&&L]P]", "[&F[&&L]P]/////////[&F[&&L]P]"}},
+        {'F', std::vector<std::string> {"X/////F", "XPF", "FF", "F", "FXP"}},
         {'X', std::vector<std::string> {"F"}}
     };
 
     auto l = Lindenmayer(characters, production_rules);
 
-    auto result = l.generate("P", 7, true);
+    std::vector<Tree> forest {};
 
-    std::shared_ptr<Branch> sBranch = std::make_shared<Branch>(6);
+    std::shared_ptr<Branch> sBranch = std::make_shared<Branch>(50);
     std::shared_ptr<Leaf> sLeaf = std::make_shared<Leaf>();
     Interpreter turtle = Interpreter(sBranch, sLeaf, 22.5f);
-    std::vector<Mesh> meshes;
-    std::vector<glm::mat4> transforms;
-    turtle.read_string(result, meshes, transforms);
-    */
+
+    for (auto pos : treePos) {
+        turtle.reset_interpreter(glm::vec3(0));
+        std::vector<Mesh> meshes {};
+        std::vector<glm::mat4> transforms {};
+
+        auto result = l.generate("F", 5, true);
+        turtle.read_string(result, meshes, transforms);
+        forest.emplace_back(meshes, transforms);
+    }
+
     // Check for OpenGL errors BEFORE entering the render loop
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
@@ -205,20 +216,21 @@ int main() {
         //    cubeShader.setMat4("model", model);
         //    cube.render(cubeShader);
         //}
-        /*t_shader.use();
+        t_shader.use();
         t_shader.setMat4("view", view);
         t_shader.setMat4("projection", projection);
+        t_shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+        t_shader.setVec3("viewPos", camera.position);
+        t_shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
+        t_shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
 
-        for (const auto& pos : treePos) {
-            const float y = elevation.getHeight(pos.x, pos.y);
+        for (int i = 0; i < forest.size(); i++) {
+            const float y = elevation.getHeight(treePos[i].x, treePos[i].y);
             model = glm::mat4(1.0f);
-            model = glm::translate(model, glm::vec3(pos.x, y, pos.y));
+            model = glm::translate(model, glm::vec3(treePos[i].x, y, treePos[i].y));
             model = glm::scale(model, glm::vec3(0.2f));
-            for (int i = 0; i < meshes.size(); i++) {
-                t_shader.setMat4("model", model * transforms[i]);
-                meshes[i].render(t_shader);
-            }
-        }*/
+            forest[i].render(t_shader, model);
+        }
 
         // events and swap buffers
         glfwSwapBuffers(window); // swaps color buffer used to render to

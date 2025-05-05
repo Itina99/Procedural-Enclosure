@@ -50,7 +50,7 @@ void Branch::build_branch(float height, float R, float r) {
     }
 
     std::vector<Texture> textures;
-    textures.push_back(Texture{.id = this->tID, .type = ""});
+    textures.push_back(Texture{.id = this->tID, .type = "texture_diffuse"});
 
     this->mesh = Mesh(vertices, std::vector<unsigned int>{}, textures);
 }
