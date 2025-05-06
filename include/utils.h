@@ -32,5 +32,7 @@ unsigned int loadTexture(char const * path);
 
 std::vector<Texture> chooseTextures(const int biomeId);
 
+unsigned int loadCubemap(const std::vector<std::string> &faces);
+
 
 #endif //UTILS_H

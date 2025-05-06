@@ -77,11 +77,11 @@ int main() {
 
 
     auto shader = Shader("../shaders/noise.vert", "../shaders/noise.frag");
-    auto cubeShader = Shader("../shaders/cube.vert", "../shaders/cube.frag");
+    auto skyShader = Shader("../shaders/skyBox.vert", "../shaders/skyBox.frag");
 
 
     // Create a Noise generator
-    const BiomeSettings biomeSettings = noiseGen.biomePresets["Mountains"];
+    const BiomeSettings biomeSettings = noiseGen.biomePresets["Islands"];
     noiseGen.setBiome(biomeSettings);
     shader.use();
     shader.setInt("biomeId", biomeSettings.id);
@@ -100,33 +100,64 @@ int main() {
 
     //Create a mesh cube
     const std::vector<Vertex> vertices = {
-            {{0.5f, 0.5f, 0.5f}},
-            {{-0.5f, 0.5f, 0.5f}},
-            {{-0.5f, -0.5f, 0.5f}},
-            {{0.5f, -0.5f, 0.5f}},
-            {{0.5f, -0.5f, -0.5f}},
-            {{-0.5f, -0.5f, -0.5f}},
-            {{-0.5f, 0.5f, -0.5f}},
-            {{0.5f, 0.5f, -0.5f}}
+        {{-1.0f,  1.0f, -1.0f}}, // 0: Top Left Back
+        {{-1.0f, -1.0f, -1.0f}}, // 1: Bottom Left Back
+        {{ 1.0f, -1.0f, -1.0f}}, // 2: Bottom Right Back
+        {{ 1.0f,  1.0f, -1.0f}}, // 3: Top Right Back
+        {{-1.0f,  1.0f,  1.0f}}, // 4: Top Left Front
+        {{-1.0f, -1.0f,  1.0f}}, // 5: Bottom Left Front
+        {{ 1.0f, -1.0f,  1.0f}}, // 6: Bottom Right Front
+        {{ 1.0f,  1.0f,  1.0f}}  // 7: Top Right Front
     };
-    //index buffer
+
+
     const std::vector<unsigned int> indices = {
-            0, 1, 2,
-            0, 2, 3,
-            3, 2, 5,
-            3, 5, 4,
-            4, 5, 6,
-            4, 6, 7,
-            7, 6, 1,
-            7, 1, 0,
-            1, 6, 5,
-            1, 5, 2,
-            4, 7, 0,
-            4, 0, 3
+        // Back face
+        0, 1, 2,
+        0, 2, 3,
+
+        // Front face
+        7, 6, 5,
+        7, 5, 4,
+
+        // Left face
+        4, 5, 1,
+        4, 1, 0,
+
+        // Right face
+        3, 2, 6,
+        3, 6, 7,
+
+        // Bottom face
+        1, 5, 6,
+        1, 6, 2,
+
+        // Top face
+        4, 0, 3,
+        4, 3, 7
     };
 
 
-    const Mesh cube(vertices, indices, {});
+
+
+    std::vector<std::string> faces
+    {
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Right.bmp",   // +X
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Left.bmp",    // -X
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Top.bmp",     // +Y
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Bottom.bmp",  // -Y
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Front.bmp",   // +Z
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Back.bmp"     // -Z
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
+
+    std::vector<Texture> skyboxTextures = {
+            {cubemapTexture, "texture_cubemap"}
+    };
+
+    const Mesh skybox(vertices, indices, skyboxTextures);
+    skyShader.use();
+    skyShader.setInt("skybox", 0);
 
     // L-System tree creation
     glEnable(GL_BLEND);
@@ -182,11 +213,22 @@ int main() {
         processInput(window);
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
-                                                static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f,
-                                                100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
+
+
         glm::mat4 view = camera.GetViewMatrix();
         auto model = glm::mat4(1.0f);
+
+        //skybox always first
+        glDepthMask(GL_FALSE);   // NON scrivere nel depth buffer
+        glDisable(GL_DEPTH_TEST);
+        skyShader.use();
+        glm::mat4 viewNoTranslate = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+        skyShader.setMat4("view", viewNoTranslate);
+        skyShader.setMat4("projection", projection);
+        skybox.render(skyShader);
+        glDepthMask(GL_TRUE);
+        glEnable(GL_DEPTH_TEST);
 
         // Stuff
         shader.use();
@@ -202,20 +244,6 @@ int main() {
 
 
         elevation.render(shader);
-
-        // Draw the trees
-        //cubeShader.use(); // NOW switch to cube shader
-        //cubeShader.setMat4("view", view);
-        //cubeShader.setMat4("projection", projection);
-
-        //for (const auto& pos : treePos) {
-        //    const float y = elevation.getHeight(pos.x, pos.y);
-        //    model = glm::mat4(1.0f);
-        //    model = glm::translate(model, glm::vec3(pos.x, y, pos.y));
-        //    model = glm::scale(model, glm::vec3(0.2f));
-        //    cubeShader.setMat4("model", model);
-        //    cube.render(cubeShader);
-        //}
         t_shader.use();
         t_shader.setMat4("view", view);
         t_shader.setMat4("projection", projection);
@@ -231,6 +259,10 @@ int main() {
             model = glm::scale(model, glm::vec3(0.2f));
             forest[i].render(t_shader, model);
         }
+
+
+
+         // <- Ripristina winding normale
 
         // events and swap buffers
         glfwSwapBuffers(window); // swaps color buffer used to render to
