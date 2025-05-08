@@ -34,5 +34,7 @@ std::vector<Texture> chooseTextures(const int biomeId);
 
 unsigned int loadCubemap(const std::vector<std::string> &faces);
 
+Mesh setSkyBox();
+
 
 #endif //UTILS_H

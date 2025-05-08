@@ -16,8 +16,7 @@ extern float lastx, lasty;
 extern float deltaTime;
 
 
-
-void error_callback(int error, const char* description){
+void error_callback(int error, const char *description) {
     fprintf(stderr, "Error: %s\n", description);
 }
 
@@ -26,7 +25,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 }
 
 void processInput(GLFWwindow *window) {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
         camera.ProcessKeyboard(FORWARD, deltaTime);
@@ -42,8 +41,7 @@ void processInput(GLFWwindow *window) {
     }
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
         camera.movementSpeed = 5.0f;
-    }
-    else {
+    } else {
         camera.movementSpeed = 2.5f;
     }
 }
@@ -63,19 +61,17 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
     camera.ProcessMouseMovement(xoffset, yoffset);
 }
 
-void scroll_callback(GLFWwindow * window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(yoffset);
 }
 
-unsigned int loadTexture(char const * path)
-{
+unsigned int loadTexture(char const *path) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
     unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data)
-    {
+    if (data) {
         GLenum format;
         if (nrComponents == 1)
             format = GL_RED;
@@ -94,9 +90,7 @@ unsigned int loadTexture(char const * path)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         stbi_image_free(data);
-    }
-    else
-    {
+    } else {
         std::cout << "Texture failed to load at path: " << path << std::endl;
         stbi_image_free(data);
     }
@@ -137,11 +131,9 @@ std::vector<Texture> chooseTextures(const int biomeId) {
         default:
             return {};
     }
-
 }
 
-unsigned int loadCubemap(const std::vector<std::string>& faces)
-{
+unsigned int loadCubemap(const std::vector<std::string> &faces) {
     stbi_set_flip_vertically_on_load(false); // ← Importante per cubemap
 
     unsigned int textureID;
@@ -149,18 +141,14 @@ unsigned int loadCubemap(const std::vector<std::string>& faces)
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
     int width, height, nrChannels;
-    for (unsigned int i = 0; i < faces.size(); i++)
-    {
-        unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-        if (data)
-        {
+    for (unsigned int i = 0; i < faces.size(); i++) {
+        unsigned char *data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data) {
             GLenum format = (nrChannels == 4) ? GL_RGBA : GL_RGB;
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
                          format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
             stbi_image_free(data);
-        }
-        else
-        {
+        } else {
             std::cerr << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
             stbi_image_free(data);
             glDeleteTextures(1, &textureID);
@@ -178,5 +166,59 @@ unsigned int loadCubemap(const std::vector<std::string>& faces)
     return textureID;
 }
 
+Mesh setSkyBox() {
+    //Create a mesh cube
+    const std::vector<Vertex> vertices = {
+        {{-1.0f, 1.0f, -1.0f}}, // 0: Top Left Back
+        {{-1.0f, -1.0f, -1.0f}}, // 1: Bottom Left Back
+        {{1.0f, -1.0f, -1.0f}}, // 2: Bottom Right Back
+        {{1.0f, 1.0f, -1.0f}}, // 3: Top Right Back
+        {{-1.0f, 1.0f, 1.0f}}, // 4: Top Left Front
+        {{-1.0f, -1.0f, 1.0f}}, // 5: Bottom Left Front
+        {{1.0f, -1.0f, 1.0f}}, // 6: Bottom Right Front
+        {{1.0f, 1.0f, 1.0f}} // 7: Top Right Front
+    };
 
+    const std::vector<unsigned int> indices = {
+        // Back face
+        0, 1, 2,
+        0, 2, 3,
 
+        // Front face
+        7, 6, 5,
+        7, 5, 4,
+
+        // Left face
+        4, 5, 1,
+        4, 1, 0,
+
+        // Right face
+        3, 2, 6,
+        3, 6, 7,
+
+        // Bottom face
+        1, 5, 6,
+        1, 6, 2,
+
+        // Top face
+        4, 0, 3,
+        4, 3, 7
+    };
+
+    std::vector<std::string> faces
+    {
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Right.bmp", // +X
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Left.bmp", // -X
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Top.bmp", // +Y
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Bottom.bmp", // -Y
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Front.bmp", // +Z
+        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Back.bmp" // -Z
+    };
+    unsigned int cubemapTexture = loadCubemap(faces);
+
+    std::vector<Texture> skyboxTextures = {
+        {cubemapTexture, "texture_cubemap"}
+    };
+
+    return {vertices, indices, skyboxTextures};
+}

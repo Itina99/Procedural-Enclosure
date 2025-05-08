@@ -123,13 +123,8 @@ vec3 getBiomeColor(float h, int biomeId) {
     else if (biomeId == 4) { // Islands
                              vec3 jungleGreen  = texture(texture_diffuse1, texCoords).rgb;
                              vec3 sandColor    = texture(texture_diffuse2, texCoords).rgb;
-                             vec3 oceanColor   = vec3(0.0, 0.4, 0.7);
 
-                             // MODIFICA: allargata zona sabbia
-                             float sandBlend   = smoothstep(0.05, 0.35, distortedH);
-
-                             vec3 terrainColor = mix(oceanColor, sandColor, sandBlend);
-                             terrainColor = mix(terrainColor, jungleGreen, smoothstep(0.3, 0.5, distortedH));
+                             vec3 terrainColor = mix(sandColor, jungleGreen, smoothstep(0.3, 0.5, distortedH));
 
                              return terrainColor;
     }

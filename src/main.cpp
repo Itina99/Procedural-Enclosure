@@ -75,9 +75,9 @@ int main() {
     glEnable(GL_DEPTH_TEST);
 
 
-
     auto shader = Shader("../shaders/noise.vert", "../shaders/noise.frag");
     auto skyShader = Shader("../shaders/skyBox.vert", "../shaders/skyBox.frag");
+    auto waterShader = Shader("../shaders/water.vert", "../shaders/water.frag");
 
 
     // Create a Noise generator
@@ -95,69 +95,28 @@ int main() {
     // Create a Noise map
     const Mesh elevation = noiseGen.generateMesh(20, 20, textures);
     // Create a Poisson map
-    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 5.0f, 20, biomeSettings.id, biomeSettings.amplitude);
+    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 5.0f, 20, biomeSettings.id,
+                                                                     biomeSettings.amplitude);
     std::cout << "Generated " << treePos.size() << " points" << std::endl;
 
-    //Create a mesh cube
-    const std::vector<Vertex> vertices = {
-        {{-1.0f,  1.0f, -1.0f}}, // 0: Top Left Back
-        {{-1.0f, -1.0f, -1.0f}}, // 1: Bottom Left Back
-        {{ 1.0f, -1.0f, -1.0f}}, // 2: Bottom Right Back
-        {{ 1.0f,  1.0f, -1.0f}}, // 3: Top Right Back
-        {{-1.0f,  1.0f,  1.0f}}, // 4: Top Left Front
-        {{-1.0f, -1.0f,  1.0f}}, // 5: Bottom Left Front
-        {{ 1.0f, -1.0f,  1.0f}}, // 6: Bottom Right Front
-        {{ 1.0f,  1.0f,  1.0f}}  // 7: Top Right Front
+    const Mesh skybox = setSkyBox();
+    //water quad
+    const std::vector<Vertex> waterVertices{
+        {{0.0f, 0.0f, 0.0f}},
+        {{19.0f, 0.0f, 0.0f}},
+        {{19.0f, 0.0f, 19.0f}},
+        {{0.0f, 0.0f, 19.0f}}
     };
 
-
-    const std::vector<unsigned int> indices = {
-        // Back face
-        0, 1, 2,
-        0, 2, 3,
-
-        // Front face
-        7, 6, 5,
-        7, 5, 4,
-
-        // Left face
-        4, 5, 1,
-        4, 1, 0,
-
-        // Right face
-        3, 2, 6,
-        3, 6, 7,
-
-        // Bottom face
-        1, 5, 6,
-        1, 6, 2,
-
-        // Top face
-        4, 0, 3,
-        4, 3, 7
+    const std::vector<unsigned int> waterIndices = {
+        0, 2, 1,
+        0, 3, 2
     };
-
-
-
-
-    std::vector<std::string> faces
-    {
-        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Right.bmp",   // +X
-        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Left.bmp",    // -X
-        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Top.bmp",     // +Y
-        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Bottom.bmp",  // -Y
-        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Front.bmp",   // +Z
-        "../textures/SkyBox/Daylight Box_Pieces/Daylight Box_Back.bmp"     // -Z
+    std::vector<Texture> waterTextures = {
+        {loadTexture("../textures/Waves/0012.png"), "texture_normal"}
     };
-    unsigned int cubemapTexture = loadCubemap(faces);
+    const auto Water = Mesh(waterVertices, waterIndices, waterTextures);
 
-    std::vector<Texture> skyboxTextures = {
-            {cubemapTexture, "texture_cubemap"}
-    };
-
-    const Mesh skybox(vertices, indices, skyboxTextures);
-    skyShader.use();
-    skyShader.setInt("skybox", 0);
 
     // L-System tree creation
     glEnable(GL_BLEND);
@@ -166,24 +125,27 @@ int main() {
 
     Shader t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
     std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
-    std::map<char, std::vector<std::string>> production_rules ={
-        {'P', std::vector<std::string> {"[&F[&&L]P[]F]/////[&F[&&L]P]///////[&F[&&L]P]", "[&F[&&L]P]/////////[&F[&&L]P]"}},
-        {'F', std::vector<std::string> {"X/////F", "XPF", "FF", "F", "FXP"}},
-        {'X', std::vector<std::string> {"F"}}
+    std::map<char, std::vector<std::string> > production_rules = {
+        {
+            'P',
+            std::vector<std::string>{"[&F[&&L]P[]F]/////[&F[&&L]P]///////[&F[&&L]P]", "[&F[&&L]P]/////////[&F[&&L]P]"}
+        },
+        {'F', std::vector<std::string>{"X/////F", "XPF", "FF", "F", "FXP"}},
+        {'X', std::vector<std::string>{"F"}}
     };
 
     auto l = Lindenmayer(characters, production_rules);
 
-    std::vector<Tree> forest {};
+    std::vector<Tree> forest{};
 
     std::shared_ptr<Branch> sBranch = std::make_shared<Branch>(50);
     std::shared_ptr<Leaf> sLeaf = std::make_shared<Leaf>();
     Interpreter turtle = Interpreter(sBranch, sLeaf, 22.5f);
 
-    for (auto pos : treePos) {
+    for (auto pos: treePos) {
         turtle.reset_interpreter(glm::vec3(0));
-        std::vector<Mesh> meshes {};
-        std::vector<glm::mat4> transforms {};
+        std::vector<Mesh> meshes{};
+        std::vector<glm::mat4> transforms{};
 
         auto result = l.generate("F", 5, true);
         turtle.read_string(result, meshes, transforms);
@@ -213,14 +175,14 @@ int main() {
         processInput(window);
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 1000.0f);
-
+        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f,
+                                                100.0f);
 
         glm::mat4 view = camera.GetViewMatrix();
         auto model = glm::mat4(1.0f);
 
         //skybox always first
-        glDepthMask(GL_FALSE);   // NON scrivere nel depth buffer
+        glDepthMask(GL_FALSE);
         glDisable(GL_DEPTH_TEST);
         skyShader.use();
         glm::mat4 viewNoTranslate = glm::mat4(glm::mat3(camera.GetViewMatrix()));
@@ -260,9 +222,21 @@ int main() {
             forest[i].render(t_shader, model);
         }
 
+        waterShader.use();
+        waterShader.setMat4("view", view);
+        waterShader.setMat4("projection", projection);
+        waterShader.setFloat("time", static_cast<float>(glfwGetTime()));
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 0.45f, 0.0f)); // Traslazione per posizionare sopra
+        waterShader.setMat4("model", glm::scale(model, glm::vec3(1.0f))); // Traslazione per posizionare sopra
+        waterShader.setFloat("waveFrequency", 3.0f);  // Più alto = onde più fitte
+        waterShader.setFloat("waveAmplitude", 0.05f);  // Più alto = onde più alte
+        waterShader.setFloat("waveSpeed", 1.5f);      // Più alto = onde più veloci
+
+        Water.render(waterShader);
 
 
-         // <- Ripristina winding normale
+        // <- Ripristina winding normale
 
         // events and swap buffers
         glfwSwapBuffers(window); // swaps color buffer used to render to
