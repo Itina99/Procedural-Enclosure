@@ -81,7 +81,7 @@ int main() {
 
 
     // Create a Noise generator
-    const BiomeSettings biomeSettings = noiseGen.biomePresets["Islands"];
+    const BiomeSettings biomeSettings = noiseGen.biomePresets["Mountains"];
     noiseGen.setBiome(biomeSettings);
     shader.use();
     shader.setInt("biomeId", biomeSettings.id);
@@ -101,21 +101,9 @@ int main() {
 
     const Mesh skybox = setSkyBox();
     //water quad
-    const std::vector<Vertex> waterVertices{
-        {{0.0f, 0.0f, 0.0f}},
-        {{19.0f, 0.0f, 0.0f}},
-        {{19.0f, 0.0f, 19.0f}},
-        {{0.0f, 0.0f, 19.0f}}
-    };
-
-    const std::vector<unsigned int> waterIndices = {
-        0, 2, 1,
-        0, 3, 2
-    };
-    std::vector<Texture> waterTextures = {
-        {loadTexture("../textures/Waves/0012.png"), "texture_normal"}
-    };
-    const auto Water = Mesh(waterVertices, waterIndices, waterTextures);
+    Mesh Water;
+    if (biomeSettings.id == 4)
+        Water = setWater();
 
 
     // L-System tree creation
@@ -123,7 +111,7 @@ int main() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_CULL_FACE);
 
-    Shader t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
+    auto t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
     std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
     std::map<char, std::vector<std::string> > production_rules = {
         {
@@ -138,9 +126,9 @@ int main() {
 
     std::vector<Tree> forest{};
 
-    std::shared_ptr<Branch> sBranch = std::make_shared<Branch>(50);
-    std::shared_ptr<Leaf> sLeaf = std::make_shared<Leaf>();
-    Interpreter turtle = Interpreter(sBranch, sLeaf, 22.5f);
+    auto sBranch = std::make_shared<Branch>(50);
+    auto sLeaf = std::make_shared<Leaf>();
+    auto turtle = Interpreter(sBranch, sLeaf, 22.5f);
 
     for (auto pos: treePos) {
         turtle.reset_interpreter(glm::vec3(0));
@@ -175,7 +163,7 @@ int main() {
         processInput(window);
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f,
+        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f,
                                                 100.0f);
 
         glm::mat4 view = camera.GetViewMatrix();
@@ -185,7 +173,7 @@ int main() {
         glDepthMask(GL_FALSE);
         glDisable(GL_DEPTH_TEST);
         skyShader.use();
-        glm::mat4 viewNoTranslate = glm::mat4(glm::mat3(camera.GetViewMatrix()));
+        auto viewNoTranslate = glm::mat4(glm::mat3(camera.GetViewMatrix()));
         skyShader.setMat4("view", viewNoTranslate);
         skyShader.setMat4("projection", projection);
         skybox.render(skyShader);
@@ -222,19 +210,19 @@ int main() {
             forest[i].render(t_shader, model);
         }
 
-        waterShader.use();
-        waterShader.setMat4("view", view);
-        waterShader.setMat4("projection", projection);
-        waterShader.setFloat("time", static_cast<float>(glfwGetTime()));
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.45f, 0.0f)); // Traslazione per posizionare sopra
-        waterShader.setMat4("model", glm::scale(model, glm::vec3(1.0f))); // Traslazione per posizionare sopra
-        waterShader.setFloat("waveFrequency", 3.0f);  // Più alto = onde più fitte
-        waterShader.setFloat("waveAmplitude", 0.05f);  // Più alto = onde più alte
-        waterShader.setFloat("waveSpeed", 1.5f);      // Più alto = onde più veloci
-
-        Water.render(waterShader);
-
+        if (biomeSettings.id == 4) {
+            waterShader.use();
+            waterShader.setMat4("view", view);
+            waterShader.setMat4("projection", projection);
+            waterShader.setFloat("time", static_cast<float>(glfwGetTime()));
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f, 0.45f, 0.0f)); // Traslazione per posizionare sopra
+            waterShader.setMat4("model", glm::scale(model, glm::vec3(1.0f))); // Traslazione per posizionare sopra
+            waterShader.setFloat("waveFrequency", 3.0f); // Più alto = onde più fitte
+            waterShader.setFloat("waveAmplitude", 0.05f); // Più alto = onde più alte
+            waterShader.setFloat("waveSpeed", 1.5f); // Più alto = onde più veloci
+            Water.render(waterShader);
+        }
 
         // <- Ripristina winding normale
 

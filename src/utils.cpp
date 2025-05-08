@@ -222,3 +222,22 @@ Mesh setSkyBox() {
 
     return {vertices, indices, skyboxTextures};
 }
+
+Mesh setWater() {
+    const std::vector<Vertex> waterVertices{
+            {{0.0f, 0.0f, 0.0f}},
+            {{19.0f, 0.0f, 0.0f}},
+            {{19.0f, 0.0f, 19.0f}},
+            {{0.0f, 0.0f, 19.0f}}
+    };
+
+    const std::vector<unsigned int> waterIndices = {
+        0, 2, 1,
+        0, 3, 2
+    };
+    std::vector<Texture> waterTextures = {
+        {loadTexture("../textures/Waves/0012.png"), "texture_normal"}
+    };
+
+    return {waterVertices, waterIndices, waterTextures};
+}
