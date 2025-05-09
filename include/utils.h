@@ -36,6 +36,7 @@ unsigned int loadCubemap(const std::vector<std::string> &faces);
 
 Mesh setSkyBox();
 Mesh setWater();
+Mesh setWall();
 
 
 #endif //UTILS_H

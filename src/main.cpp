@@ -78,10 +78,11 @@ int main() {
     auto shader = Shader("../shaders/noise.vert", "../shaders/noise.frag");
     auto skyShader = Shader("../shaders/skyBox.vert", "../shaders/skyBox.frag");
     auto waterShader = Shader("../shaders/water.vert", "../shaders/water.frag");
+    auto boxShader = Shader("../shaders/box.vert", "../shaders/box.frag");
 
 
     // Create a Noise generator
-    const BiomeSettings biomeSettings = noiseGen.biomePresets["Mountains"];
+    const BiomeSettings biomeSettings = noiseGen.biomePresets["Islands"];
     noiseGen.setBiome(biomeSettings);
     shader.use();
     shader.setInt("biomeId", biomeSettings.id);
@@ -104,6 +105,9 @@ int main() {
     Mesh Water;
     if (biomeSettings.id == 4)
         Water = setWater();
+
+    const Mesh wall = setWall();
+    boxShader.use();
 
 
     // L-System tree creation
@@ -163,7 +167,8 @@ int main() {
         processInput(window);
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f,
+        glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
+                                                static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f,
                                                 100.0f);
 
         glm::mat4 view = camera.GetViewMatrix();
@@ -223,8 +228,28 @@ int main() {
             waterShader.setFloat("waveSpeed", 1.5f); // Più alto = onde più veloci
             Water.render(waterShader);
         }
+        //walls
+        boxShader.use();
+        boxShader.setMat4("view", view);
+        boxShader.setMat4("projection", projection);
+        boxShader.setVec3("dirLight.direction", glm::vec3(-0.3f, -1.0f, -0.3f));
+        boxShader.setVec3("dirLight.ambient", glm::vec3(0.3f, 0.3f, 0.3f)); // era 0.2
+        boxShader.setVec3("dirLight.diffuse", glm::vec3(0.7f, 0.7f, 0.7f)); // era 0.5
+        boxShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f)); // ok
+        boxShader.setFloat("material.shininess", 32.0f);
+        boxShader.setVec3("viewPos", camera.position);
+        for (int i = 0; i<4; i++) {
+            model = glm::mat4(1.0f);
+            model = glm::rotate(model, glm::radians(90.0f * i), glm::vec3(0.0f, 1.0f, 0.0f));
+            if( i == 0) model = glm::translate(model, glm::vec3(-0.5f, 0.0f, -0.5f));
+            else if (i == 1) model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
+            else if (i == 2) model = glm::translate(model, glm::vec3(-19.5f, 0.0f, -19.5f));
+            else if (i == 3) model = glm::translate(model, glm::vec3(19.0f, 0.0f, -19.5f));
+            boxShader.setMat4("model", model);
+            wall.render(boxShader);
+        }
 
-        // <- Ripristina winding normale
+
 
         // events and swap buffers
         glfwSwapBuffers(window); // swaps color buffer used to render to

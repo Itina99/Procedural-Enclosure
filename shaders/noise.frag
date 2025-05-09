@@ -2,11 +2,7 @@
 
 out vec4 FragColor;
 
-struct Material {
-    sampler2D diffuse;
-    sampler2D specular;
-    float shininess;
-};
+
 
 struct DirLight {
     vec3 direction;
@@ -23,7 +19,7 @@ in vec2 texCoords;
 
 uniform vec3 viewPos;
 uniform DirLight dirLight;
-uniform Material material;
+
 
 uniform sampler2D texture_diffuse1;
 uniform sampler2D texture_diffuse2;

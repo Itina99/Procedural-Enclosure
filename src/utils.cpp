@@ -225,10 +225,10 @@ Mesh setSkyBox() {
 
 Mesh setWater() {
     const std::vector<Vertex> waterVertices{
-            {{0.0f, 0.0f, 0.0f}},
-            {{19.0f, 0.0f, 0.0f}},
-            {{19.0f, 0.0f, 19.0f}},
-            {{0.0f, 0.0f, 19.0f}}
+        {{0.0f, 0.0f, 0.0f}},
+        {{19.0f, 0.0f, 0.0f}},
+        {{19.0f, 0.0f, 19.0f}},
+        {{0.0f, 0.0f, 19.0f}}
     };
 
     const std::vector<unsigned int> waterIndices = {
@@ -240,4 +240,70 @@ Mesh setWater() {
     };
 
     return {waterVertices, waterIndices, waterTextures};
+}
+
+Mesh setWall() {
+    const std::vector<Vertex> vertices = {
+        // Bottom face
+        {{0.0f, 0.0f, 0.0f}, {0, -1, 0}, {0.0f, 0.0f}}, // 0
+        {{0.5f, 0.0f, 0.0f}, {0, -1, 0}, {1.0f, 0.0f}}, // 1
+        {{0.5f, 0.0f, 20.0f}, {0, -1, 0}, {1.0f, 20.0f}}, // 2
+        {{0.0f, 0.0f, 20.0f}, {0, -1, 0}, {0.0f, 20.0f}}, // 3
+
+        // Top face
+        {{0.0f, 1.0f, 0.0f}, {0, 1, 0}, {0.0f, 0.0f}}, // 4
+        {{0.5f, 1.0f, 0.0f}, {0, 1, 0}, {1.0f, 0.0f}}, // 5
+        {{0.5f, 1.0f, 20.0f}, {0, 1, 0}, {1.0f, 20.0f}}, // 6
+        {{0.0f, 1.0f, 20.0f}, {0, 1, 0}, {0.0f, 20.0f}}, // 7
+
+        // Front face
+        {{0.0f, 0.0f, 20.0f}, {0, 0, 1}, {0.0f, 0.0f}}, // 8
+        {{0.5f, 0.0f, 20.0f}, {0, 0, 1}, {1.0f, 0.0f}}, // 9
+        {{0.5f, 1.0f, 20.0f}, {0, 0, 1}, {1.0f, 1.0f}}, // 10
+        {{0.0f, 1.0f, 20.0f}, {0, 0, 1}, {0.0f, 1.0f}}, // 11
+
+        // Back face
+        {{0.0f, 0.0f, 0.0f}, {0, 0, -1}, {0.0f, 0.0f}}, // 12
+        {{0.5f, 0.0f, 0.0f}, {0, 0, -1}, {1.0f, 0.0f}}, // 13
+        {{0.5f, 1.0f, 0.0f}, {0, 0, -1}, {1.0f, 1.0f}}, // 14
+        {{0.0f, 1.0f, 0.0f}, {0, 0, -1}, {0.0f, 1.0f}}, // 15
+
+        // Left face
+        {{0.0f, 0.0f, 0.0f}, {-1, 0, 0}, {0.0f, 0.0f}}, // 16
+        {{0.0f, 0.0f, 20.0f}, {-1, 0, 0}, {20.0f, 0.0f}}, // 17
+        {{0.0f, 1.0f, 20.0f}, {-1, 0, 0}, {20.0f, 1.0f}}, // 18
+        {{0.0f, 1.0f, 0.0f}, {-1, 0, 0}, {0.0f, 1.0f}}, // 19
+
+        // Right face
+        {{0.5f, 0.0f, 0.0f}, {1, 0, 0}, {0.0f, 0.0f}}, // 20
+        {{0.5f, 0.0f, 20.0f}, {1, 0, 0}, {20.0f, 0.0f}}, // 21
+        {{0.5f, 1.0f, 20.0f}, {1, 0, 0}, {20.0f, 1.0f}}, // 22
+        {{0.5f, 1.0f, 0.0f}, {1, 0, 0}, {0.0f, 1.0f}}, // 23
+    };
+
+    const std::vector<unsigned int> indices = {
+        // bottom
+        0, 1, 2, 0, 2, 3,
+        // top
+        4, 6, 5, 4, 7, 6,
+        // front
+        8, 9, 10, 8, 10, 11,
+        // back
+        12, 14, 13, 12, 15, 14,
+        // left
+        16, 17, 18, 16, 18, 19,
+        // right
+        20, 22, 21, 20, 23, 22
+    };
+
+
+    std::vector<Texture> textures = {
+        {loadTexture("../textures/Walls/wooden_garage_door_diff_1k.png"), "texture_diffuse"},
+        {loadTexture("../textures/Walls/wooden_garage_door_arm_1k.png"), "texture_specular"}
+
+    };
+    // {loadTexture("../textures/Walls/wooden_garage_door_spec_1k.png"), "texture_specular"},
+    for (auto vertex: textures) {
+    }
+    return {vertices, indices, textures};
 }

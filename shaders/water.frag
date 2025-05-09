@@ -11,7 +11,7 @@ uniform float waveSpeed;
 
 void main() {
     // Calcola il centro (ipotizzando mesh centrata a 10,10 come prima)
-    vec2 center = vec2(5.0, 5.0);
+    vec2 center = vec2(8.0, 8.0);
     vec2 radialCoords = texCoords * 8.0; // Portiamo tutto su scala 0-20 circa
     vec2 delta = radialCoords - center;
 
