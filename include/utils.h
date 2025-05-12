@@ -42,7 +42,7 @@ Mesh setWater();
 Mesh setWall();
 Mesh setElevation(Biomes biome, Shader shader);
 
-std::tuple<std::vector<Point>, std::vector<Tree>>makeForest(Mesh elevation, Biomes biome);
+std::tuple<std::vector<Point>, std::vector<Tree>>makeForest(Mesh elevation, Biomes biome, float minDist);
 
 
 #endif //UTILS_H

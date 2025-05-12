@@ -110,8 +110,9 @@ int main() {
     glEnable(GL_CULL_FACE);
     glEnable(GL_DEPTH_TEST);
 
+    float minTreeDistance = 5.0f;  // Assicurati che sia di tipo float
 
-    auto [treePos,forest] = makeForest(elevation, biome);
+    auto [treePos,forest] = makeForest(elevation, biome, minTreeDistance);
 
 
 
@@ -142,18 +143,21 @@ int main() {
 
         ImGui::Begin("Bioma");
 
-        // Imposta una larghezza per la combo box, così da renderla più visibile
-        ImGui::PushItemWidth(200);  // Adatta la larghezza a 200px (puoi regolare questo valore come preferisci)
-
+        // Combo box per selezionare il bioma
+        ImGui::PushItemWidth(200);  // Imposta la larghezza della combo box
         if (ImGui::Combo("Seleziona Bioma", &selectedIndex, BiomeLabels, 4)) {
             biome = static_cast<Biomes>(selectedIndex);
             elevation = setElevation(biome, shader);
-            std::tie(treePos, forest) = makeForest(elevation, biome);
+            std::tie(treePos, forest) = makeForest(elevation, biome, minTreeDistance);
         }
+        ImGui::PopItemWidth();  // Ripristina la larghezza predefinita
 
-        ImGui::PopItemWidth();  // Ripristina la larghezza di default (opzionale)
+        // Aggiungi un box per impostare la distanza minima tra gli alberi
+     ImGui::InputFloat("Distanza Minima Alberi", &minTreeDistance, 0.1f, 1.0f, "%.2f");  // 0.1f è il passo minimo, 1.0f è il passo massimo// 0.1f è il passo minimo, 1.0f è il passo massimo
+        ImGui::Text("Distanza attuale: %.2f", minTreeDistance);  // Mostra la distanza attuale
 
         ImGui::End();
+
 
 
 

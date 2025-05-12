@@ -332,10 +332,10 @@ Mesh setElevation(const Biomes biome, Shader shader) {
     return elevation;
 }
 
-auto makeForest(const Mesh elevation, Biomes biome) -> std::tuple<std::vector<Point>, std::vector<Tree> > {
+auto makeForest(const Mesh elevation, Biomes biome,float  minDist) -> std::tuple<std::vector<Point>, std::vector<Tree> > {
     NoiseGenerator gen;
     const BiomeSettings biomeSettings = gen.biomePresets[biome];
-    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 5.0f, 20, biomeSettings.id,
+    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, minDist, 20, biomeSettings.id,
                                                                      biomeSettings.amplitude);
 
     std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
