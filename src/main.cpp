@@ -3,29 +3,23 @@
 //
 #include <iostream>
 #include <cstdio>
-#include <map>
 #include <memory>
-#include <set>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
-
-#include "branch_builder.h"
 #include "utils.h"
 #include "camera.h"
 #include "interpreter.h"
-#include "leaf_builder.h"
-#include "lindenmayer.h"
 #include "NoiseGenerator.h"
 #include "shader.h"
 #include "PoissonGenerator.h"
 #include "tree.h"
-#include "imgui.h"
-#include "backends/imgui_impl_glfw.h"
-#include "backends/imgui_impl_opengl3.h"
+#include "../lib/imgui-master/imgui.h"
+#include "../lib/imgui-master/backends/imgui_impl_glfw.h"
+#include "../lib/imgui-master/backends/imgui_impl_opengl3.h"
 
 
 // FPS related values
@@ -35,7 +29,6 @@ float lastFrame = 0.0f;
 // Camera
 Camera camera(glm::vec3(10.0f, 7.0f, 30.0f));
 
-auto noiseGen = NoiseGenerator();
 constexpr unsigned int SCR_WIDTH = 1280;
 constexpr unsigned int SCR_HEIGHT = 720;
 
@@ -82,43 +75,27 @@ int main() {
     ImGui::StyleColorsDark();
 
 
-    // Allowing mouse input
-
-
-    // Setting depth test
-    glEnable(GL_DEPTH_TEST);
 
 
     auto shader = Shader("../shaders/noise.vert", "../shaders/noise.frag");
     auto skyShader = Shader("../shaders/skyBox.vert", "../shaders/skyBox.frag");
     auto waterShader = Shader("../shaders/water.vert", "../shaders/water.frag");
     auto boxShader = Shader("../shaders/box.vert", "../shaders/box.frag");
+    auto t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
 
 
     // Create a Noise generator
-    const BiomeSettings biomeSettings = noiseGen.biomePresets["Islands"];
-    noiseGen.setBiome(biomeSettings);
-    shader.use();
-    shader.setInt("biomeId", biomeSettings.id);
-    shader.setFloat("maxAmplitude", biomeSettings.amplitude);
 
-    std::cout << "Biome ID: " << biomeSettings.id << std::endl;
+    auto biome = Biomes::ISLANDS;
 
-    const std::vector<Texture> textures = chooseTextures(biomeSettings.id);
-
-
-    // Create a Noise map
-    const Mesh elevation = noiseGen.generateMesh(20, 20, textures);
-    // Create a Poisson map
-    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 5.0f, 20, biomeSettings.id,
-                                                                     biomeSettings.amplitude);
-    std::cout << "Generated " << treePos.size() << " points" << std::endl;
+    Mesh elevation = setElevation(biome, shader);
 
     const Mesh skybox = setSkyBox();
     //water quad
     Mesh Water;
-    if (biomeSettings.id == 4)
+    if (biome == Biomes::ISLANDS) {
         Water = setWater();
+    }
 
     const Mesh wall = setWall();
     boxShader.use();
@@ -128,35 +105,12 @@ int main() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
 
-    auto t_shader = Shader("../shaders/vshader.glsl", "../shaders/fshader.glsl");
-    std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
-    std::map<char, std::vector<std::string> > production_rules = {
-        {
-            'P',
-            std::vector<std::string>{"[&F[&&L]P[]F]/////[&F[&&L]P]///////[&F[&&L]P]", "[&F[&&L]P]/////////[&F[&&L]P]"}
-        },
-        {'F', std::vector<std::string>{"X/////F", "XPF", "FF", "F", "FXP"}},
-        {'X', std::vector<std::string>{"F"}}
-    };
 
-    auto l = Lindenmayer(characters, production_rules);
+    auto [treePos,forest] = makeForest(elevation, biome);
 
-    std::vector<Tree> forest{};
 
-    auto sBranch = std::make_shared<Branch>(50);
-    auto sLeaf = std::make_shared<Leaf>();
-    auto turtle = Interpreter(sBranch, sLeaf, 22.5f);
-
-    for (auto pos: treePos) {
-        turtle.reset_interpreter(glm::vec3(0));
-        std::vector<Mesh> meshes{};
-        std::vector<glm::mat4> transforms{};
-
-        auto result = l.generate("F", 5, true);
-        turtle.read_string(result, meshes, transforms);
-        forest.emplace_back(meshes, transforms);
-    }
 
     // Check for OpenGL errors BEFORE entering the render loop
     GLenum err;
@@ -187,14 +141,13 @@ int main() {
         ImGui::End();
 
 
-
-
         // Inputs
         processInput(window);
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.zoom),
-                                                static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f,
+                                                static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT),
+                                                0.1f,
                                                 100.0f);
 
         glm::mat4 view = camera.GetViewMatrix();
@@ -241,7 +194,7 @@ int main() {
             forest[i].render(t_shader, model);
         }
 
-        if (biomeSettings.id == 4) {
+        if (biome == Biomes::ISLANDS) {
             waterShader.use();
             waterShader.setMat4("view", view);
             waterShader.setMat4("projection", projection);
@@ -264,10 +217,10 @@ int main() {
         boxShader.setVec3("dirLight.specular", glm::vec3(1.0f, 1.0f, 1.0f)); // ok
         boxShader.setFloat("material.shininess", 32.0f);
         boxShader.setVec3("viewPos", camera.position);
-        for (int i = 0; i<4; i++) {
+        for (int i = 0; i < 4; i++) {
             model = glm::mat4(1.0f);
             model = glm::rotate(model, glm::radians(90.0f * i), glm::vec3(0.0f, 1.0f, 0.0f));
-            if( i == 0) model = glm::translate(model, glm::vec3(-0.5f, 0.0f, -0.5f));
+            if (i == 0) model = glm::translate(model, glm::vec3(-0.5f, 0.0f, -0.5f));
             else if (i == 1) model = glm::translate(model, glm::vec3(0.0f, 0.0f, -0.5f));
             else if (i == 2) model = glm::translate(model, glm::vec3(-19.5f, 0.0f, -19.5f));
             else if (i == 3) model = glm::translate(model, glm::vec3(19.0f, 0.0f, -19.5f));

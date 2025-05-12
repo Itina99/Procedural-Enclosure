@@ -5,9 +5,12 @@
 #include "utils.h"
 
 #include <iostream>
-
+#include <memory>
 #include "camera.h"
-#include "mesh.h"
+#include "interpreter.h"
+#include "lindenmayer.h"
+
+
 
 
 extern Camera camera;
@@ -98,28 +101,28 @@ unsigned int loadTexture(char const *path) {
     return textureID;
 }
 
-std::vector<Texture> chooseTextures(const int biomeId) {
-    switch (biomeId) {
-        case 0: // Mountains
+std::vector<Texture> chooseTextures(const Biomes biomes) {
+    switch (biomes) {
+        case Biomes::MOUNTAINS: // Mountains
             return {
                 {loadTexture("../textures/Snow/textures/snow_02_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/Rock/rock_face_03_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/Rock/aerial_rocks_02_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/Rock/rocky_terrain_02_diff_1k.png"), "texture_diffuse"}
             };
-        case 1: // Hills
+        case Biomes::HILLS: // Hills
             return {
                 {loadTexture("../textures/grass/leafy_grass_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/grass/brown_mud_leaves_01_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/Rock/rocky_terrain_02_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/grass/aerial_grass_rock_diff_1k.png"), "texture_diffuse"}
             };
-        case 3: // Desert
+        case Biomes::DESERT: // Desert
             return {
                 {loadTexture("../textures/Sand/rock_boulder_cracked_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/Sand/sandy_gravel_02_diff_1k.png"), "texture_diffuse"},
             };
-        case 4: // Islands
+        case Biomes::ISLANDS: // Islands
             return {
                 {loadTexture("../textures/Rock/rocky_terrain_02_diff_1k.png"), "texture_diffuse"},
                 {loadTexture("../textures/Sand/aerial_beach_01_diff_1k.png"), "texture_diffuse"},
@@ -307,3 +310,57 @@ Mesh setWall() {
     }
     return {vertices, indices, textures};
 }
+
+Mesh setElevation(const Biomes biome, Shader shader) {
+    NoiseGenerator gen;
+    const BiomeSettings biomeSettings = gen.biomePresets[biome];
+    gen.setBiome(biomeSettings);
+    const std::vector<Texture> textures = chooseTextures(biome);
+    const Mesh elevation = gen.generateMesh(20, 20, textures);
+    shader.use();
+    shader.setInt("biomeId", biomeSettings.id);
+    shader.setFloat("maxAmplitude", biomeSettings.amplitude);
+
+    return elevation;
+}
+
+std::tuple<std::vector<Point>, std::vector<Tree>> makeForest(Mesh elevation, Biomes biome) {
+    NoiseGenerator gen;
+    const BiomeSettings biomeSettings = gen.biomePresets[biome];
+    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 5.0f, 20, biomeSettings.id,
+                                                                     biomeSettings.amplitude);
+
+    std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
+    std::map<char, std::vector<std::string> > production_rules = {
+        {
+            'P',
+            std::vector<std::string>{
+                "[&F[&&L]P[]F]/////[&F[&&L]P]///////[&F[&&L]P]", "[&F[&&L]P]/////////[&F[&&L]P]"
+            }
+        },
+        {'F', std::vector<std::string>{"X/////F", "XPF", "FF", "F", "FXP"}},
+        {'X', std::vector<std::string>{"F"}}
+    };
+
+    auto l = Lindenmayer(characters, production_rules);
+
+    auto sBranch = std::make_shared<Branch>(50);
+    auto sLeaf = std::make_shared<Leaf>();
+    auto turtle = Interpreter(sBranch, sLeaf, 22.5f);
+
+    std::vector<Tree> forest{};
+
+    for (auto pos: treePos) {
+        turtle.reset_interpreter(glm::vec3(0));
+        std::vector<Mesh> meshes{};
+        std::vector<glm::mat4> transforms{};
+
+        auto result = l.generate("F", 5, true);
+        turtle.read_string(result, meshes, transforms);
+        forest.emplace_back(meshes, transforms);
+    }
+
+    return {treePos, forest};
+}
+
+

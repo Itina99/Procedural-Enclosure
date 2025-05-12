@@ -12,6 +12,9 @@
 #include <vector>
 
 #include "mesh.h"
+#include "NoiseGenerator.h"
+#include "PoissonGenerator.h"
+#include "tree.h"
 
 void error_callback(int error, const char* description);
 
@@ -37,6 +40,9 @@ unsigned int loadCubemap(const std::vector<std::string> &faces);
 Mesh setSkyBox();
 Mesh setWater();
 Mesh setWall();
+Mesh setElevation(Biomes biome, Shader shader);
+
+std::tuple<std::vector<Point>, std::vector<Tree>>makeForest(Mesh elevation, Biomes biome);
 
 
 #endif //UTILS_H
