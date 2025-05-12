@@ -112,7 +112,7 @@ int main() {
 
     float minTreeDistance = 5.0f;  // Assicurati che sia di tipo float
 
-    auto [treePos,forest] = makeForest(elevation, biome, minTreeDistance);
+    auto [treePos, forest, treeConfig] = makeForest(elevation, biome, minTreeDistance);
 
 
 
@@ -148,7 +148,7 @@ int main() {
         if (ImGui::Combo("Seleziona Bioma", &selectedIndex, BiomeLabels, 4)) {
             biome = static_cast<Biomes>(selectedIndex);
             elevation = setElevation(biome, shader);
-            std::tie(treePos, forest) = makeForest(elevation, biome, minTreeDistance);
+            std::tie(treePos, forest, treeConfig) = makeForest(elevation, biome, minTreeDistance);
         }
         ImGui::PopItemWidth();  // Ripristina la larghezza predefinita
 
@@ -201,10 +201,11 @@ int main() {
         t_shader.use();
         t_shader.setMat4("view", view);
         t_shader.setMat4("projection", projection);
-        t_shader.setVec3("light.direction", -0.2f, -1.0f, -0.3f);
+        t_shader.setVec3("light.direction", -0.3f, -1.0f, -0.3f);
         t_shader.setVec3("viewPos", camera.position);
-        t_shader.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-        t_shader.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
+        t_shader.setVec3("light.ambient", 0.3f, 0.3f, 0.3f);
+        t_shader.setVec3("light.diffuse", 0.7f, 0.7f, 0.7f);
+        t_shader.setFloat("alpha_discard", treeConfig.alpha_discard);
 
         for (int i = 0; i < forest.size(); i++) {
             const float y = elevation.getHeight(treePos[i].x, treePos[i].y);

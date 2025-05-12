@@ -11,9 +11,10 @@ class Drawer {
 public:
     virtual void build_branch(float height, float R, float r) {}
     virtual void build_leaf(float size) {}
+    virtual void build_junciton(float radius) {}
 
     virtual ~Drawer() = default;
-    virtual Mesh getResult() {return Mesh();}
+    virtual std::shared_ptr<Mesh> getResult() {return std::make_shared<Mesh>();}
 };
 
 #endif //ABSTRACT_BUILDER_H

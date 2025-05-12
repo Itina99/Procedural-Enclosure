@@ -12,10 +12,11 @@
 
 class Lindenmayer {
 public:
-    Lindenmayer(const std::set<char> &alphabet, const std::map<char, std::vector<std::string>> &production_rules)
-        : alphabet(alphabet),
-          production_rules(production_rules) {
+    explicit Lindenmayer(const std::map<char, std::map<std::string, float>> &production_rules)
+        : production_rules(production_rules) {
     }
+
+    std::string extract_rule(const std::map<std::string, float>& stochastic_rule);
 
     std::string iterate(const std::string &current_string);
 
@@ -23,8 +24,7 @@ public:
 
     std::string generate(const std::string &axiom, unsigned int n_iterations, bool need_cleanup = false);
 private:
-    std::set<char> alphabet;
-    std::map<char, std::vector<std::string>> production_rules;
+    std::map<char, std::map<std::string, float>> production_rules;
 };
 
 

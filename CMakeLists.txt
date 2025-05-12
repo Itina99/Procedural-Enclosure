@@ -4,14 +4,15 @@ project(Procedural_Enclosure)
 set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(lib/glfw-3.4)
-add_subdirectory(lib/imgui-master)
-
-include_directories( SYSTEM lib/glad/include
-        include
-        lib/imgui-master)
 
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
+
+file(GLOB IMGUI_SOURCES
+        ${CMAKE_SOURCE_DIR}/lib/imgui-master/*.cpp
+        ${CMAKE_SOURCE_DIR}/lib/imgui-master/backends/imgui_impl_glfw.cpp
+        ${CMAKE_SOURCE_DIR}/lib/imgui-master/backends/imgui_impl_opengl3.cpp
+)
 
 add_executable(${PROJECT_NAME} src/main.cpp
         src/glad.c
@@ -35,15 +36,25 @@ add_executable(${PROJECT_NAME} src/main.cpp
         include/branch_builder.h
         src/leaf_builder.cpp
         include/leaf_builder.h
+        src/junction_builder.cpp
+        include/junction_builder.h
         src/interpreter.cpp
         include/interpreter.h
         src/tree.cpp
-        include/tree.h)
+        include/tree.h
+        ${IMGUI_SOURCES})
+
+target_include_directories(${PROJECT_NAME}
+        PRIVATE include
+        PRIVATE lib/glad/include
+        PRIVATE lib/glfw-3.4/include
+        PRIVATE ${CMAKE_SOURCE_DIR}/lib/imgui-master
+        PRIVATE ${CMAKE_SOURCE_DIR}/lib/imgui-master/backends
+)
 
 target_link_libraries(${PROJECT_NAME} glfw)
 target_link_libraries(${PROJECT_NAME} OpenGL::GL)
 target_link_libraries(${PROJECT_NAME} glm::glm)
-target_link_libraries(${PROJECT_NAME} imgui)
 
 
 

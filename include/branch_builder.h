@@ -5,17 +5,19 @@
 #ifndef BRANCH_BUILDER_H
 #define BRANCH_BUILDER_H
 
+#include <memory>
+
 #include "abstract_builder.h"
 
 class Branch : public Drawer {
 public:
-    Branch(unsigned int resolution = 8);
+    Branch(const char* texture_path, unsigned int resolution = 8);
     ~Branch() override = default;
     void build_branch(float height, float R, float r) override;
-    Mesh getResult() override;
+    std::shared_ptr<Mesh> getResult() override;
 
 private:
-    Mesh mesh;
+    std::shared_ptr<Mesh> mesh;
     unsigned int resolution;
     unsigned int tID;
 };

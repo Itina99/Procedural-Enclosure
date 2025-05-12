@@ -9,12 +9,31 @@
 #include <GLFW/glfw3.h>
 #include <fstream>
 #include <cassert>
+#include <map>
 #include <vector>
 
+#include "leaf_builder.h"
 #include "mesh.h"
 #include "NoiseGenerator.h"
 #include "PoissonGenerator.h"
 #include "tree.h"
+
+struct TreeConfig {
+    std::map<char, std::map<std::string, float>> production_rules;
+    const char* bark_texture_path;
+    const char* leaf_texture_path;
+    Type leaf_type;
+    float branch_length;
+    float branch_radius;
+    float leaf_size;
+    float radius_decay;
+    float length_decay;
+    int production_iterations;
+    float alpha_discard;
+    float angle;
+    unsigned int resolution;
+    std::string starting_production;
+};
 
 void error_callback(int error, const char* description);
 
@@ -33,6 +52,8 @@ void scroll_callback(GLFWwindow * window, double xoffset, double yoffset);
 
 unsigned int loadTexture(char const * path);
 
+TreeConfig getConfig(Biomes biome);
+
 std::vector<Texture> chooseTextures(const int biomeId);
 
 unsigned int loadCubemap(const std::vector<std::string> &faces);
@@ -42,7 +63,7 @@ Mesh setWater();
 Mesh setWall();
 Mesh setElevation(Biomes biome, Shader shader);
 
-std::tuple<std::vector<Point>, std::vector<Tree>>makeForest(Mesh elevation, Biomes biome, float minDist);
+std::tuple<std::vector<Point>, std::vector<Tree>, TreeConfig> makeForest(Mesh elevation, Biomes biome, float minDist);
 
 
 #endif //UTILS_H

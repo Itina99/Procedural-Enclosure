@@ -6,10 +6,7 @@
 
 #include <utility>
 
-Interpreter::Interpreter(std::shared_ptr<Branch> branch, std::shared_ptr<Leaf> leaf, float angle, glm::vec3 position, float radius, float length, float radius_decay, float length_decay) : radius(radius), length(length), radius_decay(radius_decay), length_decay(length_decay) {
-    this->builder_map['F'] = branch;
-    this->builder_map['P'] = branch;
-    this->builder_map['L'] = leaf;
+Interpreter::Interpreter(float angle, glm::vec3 position, float radius, float length, float radius_decay, float length_decay) : init_radius(radius), init_length(length), radius_decay(radius_decay), length_decay(length_decay) {
 
     TurtleState s = TurtleState();
     s.position = position;
@@ -17,42 +14,47 @@ Interpreter::Interpreter(std::shared_ptr<Branch> branch, std::shared_ptr<Leaf> l
     s.forward = glm::vec3(0.0f, 1.0f, 0.0f);
     s.up = glm::vec3(0.0f, 0.0f,1.0f);
     s.right = glm::vec3(1.0f, 0.0f, 0.0f);
-    this->movement_step = this->length;
+    s.step = this->init_length;
+    s.scale_matrix = glm::mat4(1.0f);
     this->angle = glm::radians(angle);
     this->state = s;
 }
 
-void Interpreter::read_string(const std::string &predicate, std::vector<Mesh>& meshes, std::vector<glm::mat4>& transforms) {
+void Interpreter::read_string(const std::string &predicate, std::vector<char>& models, std::vector<glm::mat4>& transforms) {
     TurtleState current = this->state;
     glm::quat rot;
-    glm::mat4 translation, rotation;
+    glm::mat4 translation, rotation = glm::mat4(1.0f);
     for (char c : predicate) {
         switch (c) {
             case 'P': {
                 translation = glm::translate(glm::mat4(1.0f), current.position);
                 rotation = glm::mat4_cast(current.orientation);
-                transforms.push_back(translation * rotation);
-                this->builder_map['P']->build_branch(0.5f * this->length, this->radius, 0);
-                meshes.push_back(this->builder_map['F']->getResult());
+                transforms.push_back(translation * rotation * current.scale_matrix);
+                models.push_back('P');
+                break;
+            }
+            case 'J': {
+                translation = glm::translate(glm::mat4(1.0f), current.position);
+                rotation = glm::mat4_cast(current.orientation);
+                transforms.push_back(translation * rotation * glm::scale(current.scale_matrix, glm::vec3(1.0f, current.scale_matrix[0][0], 1.0f)));
+                models.push_back('J');
                 break;
             }
             case 'F': {
                 translation = glm::translate(glm::mat4(1.0f), current.position);
                 rotation = glm::mat4_cast(current.orientation);
-                transforms.push_back(translation * rotation);
-                this->builder_map['F']->build_branch(this->length, this->radius, this->radius);
+                transforms.push_back(translation * rotation * current.scale_matrix);
                 glm::vec3 movement_direction = glm::normalize(glm::vec3(current.forward.x, current.forward.y, current.forward.z));
-                this->state.position = current.position + this->movement_step * movement_direction;
+                this->state.position = current.position + current.step * movement_direction;
                 current = this->state;
-                meshes.push_back(this->builder_map['F']->getResult());
+                models.push_back('F');
                 break;
             }
             case 'L': {
                 translation = glm::translate(glm::mat4(1.0f), current.position);
                 rotation = glm::mat4_cast(current.orientation);
-                transforms.push_back(translation * rotation);
-                this->builder_map['L']->build_leaf(1.0f);
-                meshes.push_back(this->builder_map['L']->getResult());
+                transforms.push_back(translation * rotation * scale(glm::mat4(1.0), glm::vec3(current.scale_matrix[1][1])));
+                models.push_back('L');
                 break;
             }
             case '+': {
@@ -133,7 +135,7 @@ void Interpreter::read_string(const std::string &predicate, std::vector<Mesh>& m
                 current = this->state;
                 break;
             }
-            case '\\': {
+            case '(': {
                 rot = glm::angleAxis(-this->angle, current.forward);
                 this->state.orientation = rot * current.orientation;
                 glm::quat up = glm::quat(0.0f, current.up);
@@ -145,6 +147,20 @@ void Interpreter::read_string(const std::string &predicate, std::vector<Mesh>& m
                 this->state.up = glm::normalize(glm::vec3(rotated_up.x, rotated_up.y, rotated_up.z));
                 this->state.forward = glm::normalize(glm::vec3(rotated_fwd.x, rotated_fwd.y, rotated_fwd.z));
                 this->state.right = glm::normalize(glm::vec3(rotated_right.x, rotated_right.y, rotated_right.z));
+                current = this->state;
+                break;
+            }
+            case '!': {
+                this->state.scale_matrix = scale(this->state.scale_matrix, glm::vec3(radius_decay, 1.0f, radius_decay ));
+                this->state.radius *= radius_decay;
+                current = this->state;
+                break;
+            }
+            case '%': {
+                if (this->state.step * length_decay > init_length/5) {
+                    this->state.scale_matrix = scale(this->state.scale_matrix, glm::vec3(1.0f, length_decay, 1.0f ));
+                    this->state.step *= length_decay;
+                }
                 current = this->state;
                 break;
             }
@@ -160,7 +176,6 @@ void Interpreter::read_string(const std::string &predicate, std::vector<Mesh>& m
             }
             default:
                 break;
-
         }
     }
 }
@@ -171,4 +186,7 @@ void Interpreter::reset_interpreter(glm::vec3 position) {
     this->state.forward = glm::vec3(0.0f, 1.0f, 0.0f);
     this->state.up = glm::vec3(0.0f, 0.0f,1.0f);
     this->state.right = glm::vec3(1.0f, 0.0f, 0.0f);
+    this->state.scale_matrix = glm::mat4(1.0f);
+    this->state.step = init_length;
+    this->state.radius = init_radius;
 }

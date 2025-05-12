@@ -8,6 +8,7 @@
 #include <memory>
 #include "camera.h"
 #include "interpreter.h"
+#include "junction_builder.h"
 #include "lindenmayer.h"
 
 
@@ -319,6 +320,157 @@ Mesh setWall() {
     return {vertices, indices, textures};
 }
 
+TreeConfig getConfig(Biomes biome) {
+    std::map<Biomes, TreeConfig> configurations = {
+        {
+            Biomes::MOUNTAINS, {
+                {
+            {
+                    'F', std::map<std::string, float> {
+                            {"X[[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]//[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]][&&&&&!!!!!!B]//[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]/[&&&&&!!!!!!B]//[&&&&&!!!!!!B]/[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]/[!!!!!!&&&&&B]//[&&&&&!!!!!!B]/[!!!!!!&&&&&B]]F[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]", 0.23},
+                            {"X[/[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]//[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]][&&&&&!!!!!!B]//[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]/[&&&&&!!!!!!B]///[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]][&&&&&!!!!!!B]///[!!!!!!&&&&&B]F[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]", 0.23},
+                            {"X[/[&&&&&!!!!!!B]/[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]][&&&&&!!!!!!B]//[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]][&&&&&!!!!!!B]/[!!!!!!&&&&&B]/[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]][&&&&&!!!!!!B]//[!!!!!!&&&&&B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]]F[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]", 0.23},
+                            {"X[//[&&&&&!!!!!!B]/[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]//[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]][&&&&&!!!!!!B]//[&&&&&!!!!!!B]//[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]/[&&&&&!!!!!!B]//[!!!!!!&&&&&B]/[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]]F[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]", 0.23},
+                            {"X[[&&&&&&L]////[&&&&&&L]////[&&&&&&L]////[&&&&&&L]]", 0.08}
+                    }
+                },
+                {
+                    'B', std::map<std::string, float> {
+                            // {"X!%%[---L][////&&&L][+++L][((((&&&L]B", 1.0f},
+                            {"X!%%[---/L][+++(L]B", 1.0f},
+                        }
+                    }
+                },
+                "../textures/trees/Bark_007_SD/Bark_007_BaseColor.jpg",
+                "../textures/trees/Twigs.png",
+                REGULAR,
+                1.5f,
+                0.2f,
+                3.0f,
+                0.85f,
+                0.9f,
+                7,
+                0.6f,
+                22.5f,
+                16,
+                "XXF"
+            }
+        },
+        {
+            Biomes::HILLS, {
+                {
+                    {'P', std::map<std::string, float> {
+                      {"[&F[&&L]PF]/////[&F[&&L]P]///////[&F[&&L]P]", 0.5},
+                      {"[&F[&&L]P]/////////[&F[&&L]P]", 0.5}}},
+                    {'F', std::map<std::string, float> {
+                      {"X/////F", 0.2},
+                      {"XPF", 0.2},
+                      {"FF", 0.2},
+                      {"F", 0.2},
+                      {"FXP", 0.2}}},
+                    {'X', std::map<std::string, float> {{"F", 1.0}}}
+                },
+                "../textures/trees/Bark_007_SD/Bark_007_BaseColor.jpg",
+                "../textures/trees/Leaves.png",
+                REGULAR,
+                1.0f,
+                0.1f,
+                1.0f,
+                0.9f,
+                0.9f,
+                7,
+                0.9f,
+                22.5f,
+                16,
+                "XF"
+            }
+        },
+        {
+            Biomes::DESERT, {
+                {
+                    {'F', std::map<std::string, float> {
+                        {"F", 0.05},
+                        {"FF", 0.6},
+                        {"FJ", 0.1},
+                        {"[B]F", 0.027},
+                        {"[/B]F", 0.027},
+                        {"[///B]F", 0.027},
+                        {"[/////B]F", 0.027},
+                        {"[///////B]F", 0.027},
+                        {"[(B]F", 0.027},
+                        {"[(((B]F", 0.027},
+                        {"[(((((B]F", 0.027},
+                        {"[(((((((B]F", 0.027}}
+                    },
+                    {'B', std::map<std::string, float> {{"!++++XJ----XF", 1.0}}}
+                },
+                "../textures/trees/cactus_0006_1k_8XvjS2/plants_0006_color_1k.jpg",
+                "../textures/trees/Leaves.png",
+                REGULAR,
+                1.0f,
+                0.4f,
+                1.0f,
+                0.9f,
+                0.9f,
+                4,
+                0.9f,
+                22.5f,
+                16,
+                "XF"
+            }
+        },
+        {
+            Biomes::ISLANDS, {
+                {
+                    {
+                        'F', std::map<std::string, float> {
+                        {"^XX!F", 0.4},
+                        {"XX!F", 0.4},
+                        {"^!X", 0.1},
+                        {"!X", 0.1}
+                        }
+                    },
+                    {
+                        'B', std::map<std::string, float> {
+                        {"&X", 0.2},
+                        {"//////&&X", 0.2},
+                        {"/////////////////&X", 0.2},
+                        {"//////////////////////////////////&X", 0.2},
+                        {"///////////////////////////////////////////////////////&X", 0.2}
+                        }
+                    },
+                    {
+                        'T', std::map<std::string, float> {
+                        {"J[^^^^^^^^^^^^^^^^^^^^L]//////////[^^^^^^^^^^^^^^^L]//////////[^^^^^^^^^^^^^^^^^^^^L]//////////[^^^^^^^^^^^^^^^L]//////////[^^^^^^^^^^^^^^^^^^^^L]//////////[^^^^^^^^^^^^^^^L]//////////[^^^^^^^^^^^^^^^^^^^^L]//////////[^^^^^^^^^^^^^^^L]", 1.0}
+                        }
+                    }
+                },
+                "../textures/trees/palm_tree_bark_1k/textures/palm_tree_bark_diff_1k.jpg",
+                "../textures/trees/Palm.png",
+                PALM,
+                1.5f,
+                0.4f,
+                2.5f,
+                0.9f,
+                0.9f,
+                5,
+                0.5f,
+                5.0f,
+                16,
+                "BXFT"
+            }
+        }
+    };
+
+    auto it = configurations.find(biome);
+    if (it != configurations.end()) {
+        return it->second;
+    }
+    else {
+        throw std::runtime_error("Errore: la configurazione richiesta non esiste.");
+    }
+}
+
 Mesh setElevation(const Biomes biome, Shader shader) {
     NoiseGenerator gen;
     const BiomeSettings biomeSettings = gen.biomePresets[biome];
@@ -332,43 +484,44 @@ Mesh setElevation(const Biomes biome, Shader shader) {
     return elevation;
 }
 
-auto makeForest(const Mesh elevation, Biomes biome,float  minDist) -> std::tuple<std::vector<Point>, std::vector<Tree> > {
+auto makeForest(const Mesh elevation, Biomes biome,float  minDist) -> std::tuple<std::vector<Point>, std::vector<Tree>, TreeConfig> {
     NoiseGenerator gen;
     const BiomeSettings biomeSettings = gen.biomePresets[biome];
+    TreeConfig config = getConfig(biome);
     std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, minDist, 20, biomeSettings.id,
                                                                      biomeSettings.amplitude);
 
-    std::set<char> characters = {'P', 'F', 'L', '+', '-', '&', '^', '/', '\\', '[', ']', 'X'};
-    std::map<char, std::vector<std::string> > production_rules = {
-        {
-            'P',
-            std::vector<std::string>{
-                "[&F[&&L]P[]F]/////[&F[&&L]P]///////[&F[&&L]P]", "[&F[&&L]P]/////////[&F[&&L]P]"
-            }
-        },
-        {'F', std::vector<std::string>{"X/////F", "XPF", "FF", "F", "FXP"}},
-        {'X', std::vector<std::string>{"F"}}
-    };
+    auto l = Lindenmayer(config.production_rules);
 
-    auto l = Lindenmayer(characters, production_rules);
+    std::unique_ptr<Branch> sBranch = std::make_unique<Branch>(config.bark_texture_path, config.resolution);
+    std::unique_ptr<Leaf> sLeaf = std::make_unique<Leaf>(config.leaf_texture_path, config.leaf_type);
+    std::unique_ptr<Junction> sJunc = std::make_unique<Junction>(config.bark_texture_path, config.resolution);
+    sBranch->build_branch(config.branch_length, config.branch_radius, config.branch_radius);
+    sLeaf->build_leaf(config.leaf_size);
+    sJunc->build_junciton(config.branch_radius);
 
-    auto sBranch = std::make_shared<Branch>(50);
-    auto sLeaf = std::make_shared<Leaf>();
-    auto turtle = Interpreter(sBranch, sLeaf, 22.5f);
+    std::shared_ptr<Mesh> branch_ptr = sBranch->getResult();
+    std::shared_ptr<Mesh> leaf_ptr = sLeaf->getResult();
+    std::shared_ptr<Mesh> junc_ptr = sJunc->getResult();
+
+    sBranch->build_branch(0.5f * config.branch_length, config.branch_radius, 0);
+    std::shared_ptr<Mesh> end_ptr = sBranch->getResult();
+
+    Interpreter turtle = Interpreter(config.angle, glm::vec3(0.0f), config.branch_radius, config.branch_length, config.radius_decay);
 
     std::vector<Tree> forest{};
 
     for (auto pos: treePos) {
         turtle.reset_interpreter(glm::vec3(0));
-        std::vector<Mesh> meshes{};
-        std::vector<glm::mat4> transforms{};
+        std::vector<char> models {};
+        std::vector<glm::mat4> transforms {};
 
-        auto result = l.generate("F", 5, true);
-        turtle.read_string(result, meshes, transforms);
-        forest.emplace_back(meshes, transforms);
+        auto result = l.generate(config.starting_production, config.production_iterations, true);
+        turtle.read_string(result, models, transforms);
+        forest.emplace_back(transforms, models, branch_ptr, leaf_ptr, end_ptr, junc_ptr);
     }
 
-    return {treePos, forest};
+    return {treePos, forest, config};
 }
 
 

@@ -27,23 +27,28 @@ struct TurtleState {
     glm::vec3 up;
     glm::vec3 forward;
     glm::vec3 right;
+
+    // Per scala
+    glm::mat4 scale_matrix;
+
+    float step;
+    float radius;
 };
 
 class Interpreter {
 public:
-    Interpreter(std::shared_ptr<Branch> branch, std::shared_ptr<Leaf> leaf, float angle = 10.0f, glm::vec3 position = glm::vec3(0.0f), float radius = 0.1f, float length = 1.0f, float radius_decay = 0.9f, float length_decay = 0.9f);
+    explicit Interpreter(float angle = 10.0f, glm::vec3 position = glm::vec3(0.0f), float radius = 0.1f, float length = 1.0f, float radius_decay = 0.9f, float length_decay = 0.9f);
     ~Interpreter() = default;
 
-    void read_string(const std::string & predicate, std::vector<Mesh>& meshes, std::vector<glm::mat4> & transforms);
+    void read_string(const std::string & predicate, std::vector<char>& models, std::vector<glm::mat4> & transforms);
     void reset_interpreter(glm::vec3 position = glm::vec3(0.0f));
 private:
-    std::map<const char, std::shared_ptr<Drawer>> builder_map;
-    float radius, length;
+    float init_radius, init_length;
     float length_decay, radius_decay;
 
     TurtleState state;
     std::stack<TurtleState> state_stack;
-    float movement_step, angle;
+    float angle;
 };
 
 
