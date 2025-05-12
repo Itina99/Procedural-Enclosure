@@ -23,6 +23,10 @@
 #include "shader.h"
 #include "PoissonGenerator.h"
 #include "tree.h"
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+
 
 // FPS related values
 float deltaTime = 0.0f;
@@ -58,18 +62,28 @@ int main() {
 
     // setting callback to resize viewport when resizing window
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
+
+    glfwSetScrollCallback(window, scroll_callback);
 
     // This should be after window context is selected
     if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
     }
+    std::cout << "OpenGL Version: " << glGetString(GL_VERSION) << std::endl;
+
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init("#version 460 core");
+
+
+    ImGui::StyleColorsDark();
+
 
     // Allowing mouse input
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, mouse_callback);
 
-    glfwSetScrollCallback(window, scroll_callback);
 
     // Setting depth test
     glEnable(GL_DEPTH_TEST);
@@ -162,6 +176,18 @@ int main() {
         // setting clear color
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::Begin("Debug UI");
+        ImGui::Text("Hello, ImGui!");
+        static float f = 0.0f;
+        ImGui::SliderFloat("Float value", &f, 0.0f, 1.0f);
+        ImGui::End();
+
+
+
 
         // Inputs
         processInput(window);
@@ -248,7 +274,8 @@ int main() {
             boxShader.setMat4("model", model);
             wall.render(boxShader);
         }
-
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 
         // events and swap buffers
@@ -261,5 +288,9 @@ int main() {
     glfwDestroyWindow(window); // Destroy the window
 
     glfwTerminate(); // Terminate glfw, cleaning everything up
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     return 0;
 }
