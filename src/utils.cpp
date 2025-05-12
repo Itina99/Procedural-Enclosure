@@ -484,14 +484,16 @@ Mesh setElevation(const Biomes biome, Shader shader) {
     return elevation;
 }
 
-auto makeForest(const Mesh elevation, Biomes biome,float  minDist) -> std::tuple<std::vector<Point>, std::vector<Tree>, TreeConfig> {
+std::vector<Point> generateTreePositions(const Mesh terrain, Biomes biome, float minDist) {
     NoiseGenerator gen;
     const BiomeSettings biomeSettings = gen.biomePresets[biome];
-    TreeConfig config = getConfig(biome);
-    std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, minDist, 20, biomeSettings.id,
+    std::vector<Point> treePos = PoissonGenerator::generatePositions(terrain, 20, 20, minDist, 20, biomeSettings.id,
                                                                      biomeSettings.amplitude);
 
-    auto l = Lindenmayer(config.production_rules);
+    return treePos;
+}
+
+auto makeForest(std::vector<std::string> trees, const TreeConfig& config) -> std::vector<Tree> {
 
     std::unique_ptr<Branch> sBranch = std::make_unique<Branch>(config.bark_texture_path, config.resolution);
     std::unique_ptr<Leaf> sLeaf = std::make_unique<Leaf>(config.leaf_texture_path, config.leaf_type);
@@ -511,17 +513,29 @@ auto makeForest(const Mesh elevation, Biomes biome,float  minDist) -> std::tuple
 
     std::vector<Tree> forest{};
 
-    for (auto pos: treePos) {
+    for (const auto& tree: trees) {
         turtle.reset_interpreter(glm::vec3(0));
         std::vector<char> models {};
         std::vector<glm::mat4> transforms {};
 
-        auto result = l.generate(config.starting_production, config.production_iterations, true);
-        turtle.read_string(result, models, transforms);
+        turtle.read_string(tree, models, transforms);
         forest.emplace_back(transforms, models, branch_ptr, leaf_ptr, end_ptr, junc_ptr);
     }
 
-    return {treePos, forest, config};
+    return forest;
+}
+
+std::vector<std::string> treeStrings(const TreeConfig& config, int nTrees) {
+    std::vector<std::string> treeStrings{};
+    auto l = Lindenmayer(config.production_rules);
+    for (int i=0; i < nTrees; i++) {
+        treeStrings.push_back(l.generate(config.starting_production, config.production_iterations, true));
+    }
+    return treeStrings;
+}
+
+std::vector<Tree> adjustForest(const TreeConfig& config) {
+    return {};
 }
 
 

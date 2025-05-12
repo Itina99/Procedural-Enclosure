@@ -54,7 +54,7 @@ unsigned int loadTexture(char const * path);
 
 TreeConfig getConfig(Biomes biome);
 
-std::vector<Texture> chooseTextures(const int biomeId);
+std::vector<Texture> chooseTextures(const Biomes biomes);
 
 unsigned int loadCubemap(const std::vector<std::string> &faces);
 
@@ -63,7 +63,12 @@ Mesh setWater();
 Mesh setWall();
 Mesh setElevation(Biomes biome, Shader shader);
 
-std::tuple<std::vector<Point>, std::vector<Tree>, TreeConfig> makeForest(Mesh elevation, Biomes biome, float minDist);
+std::vector<Point> generateTreePositions(Mesh terrain, Biomes biome, float minDist);
 
+std::vector<Tree> makeForest(std::vector<std::string> trees, const TreeConfig& config);
+
+std::vector<std::string> treeStrings(const TreeConfig& config, int nTrees);
+
+std::vector<Tree> adjustForest(const TreeConfig& config);
 
 #endif //UTILS_H

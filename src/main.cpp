@@ -75,8 +75,6 @@ int main() {
     ImGui::StyleColorsDark();
 
 
-
-
     auto shader = Shader("../shaders/noise.vert", "../shaders/noise.frag");
     auto skyShader = Shader("../shaders/skyBox.vert", "../shaders/skyBox.frag");
     auto waterShader = Shader("../shaders/water.vert", "../shaders/water.frag");
@@ -112,16 +110,16 @@ int main() {
 
     float minTreeDistance = 5.0f;  // Assicurati che sia di tipo float
 
-    auto [treePos, forest, treeConfig] = makeForest(elevation, biome, minTreeDistance);
-
-
+    auto treePos = generateTreePositions(elevation, biome, minTreeDistance);
+    TreeConfig config = getConfig(biome);
+    auto trees = treeStrings(config, treePos.size());
+    auto forest = makeForest(trees, config);
 
     // Check for OpenGL errors BEFORE entering the render loop
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
         std::cerr << "OpenGL Error: " << err << std::endl;
     }
-
 
     // drawing until window closes RENDER LOOP
     while (!glfwWindowShouldClose(window)) {
@@ -148,18 +146,69 @@ int main() {
         if (ImGui::Combo("Seleziona Bioma", &selectedIndex, BiomeLabels, 4)) {
             biome = static_cast<Biomes>(selectedIndex);
             elevation = setElevation(biome, shader);
-            std::tie(treePos, forest, treeConfig) = makeForest(elevation, biome, minTreeDistance);
+            treePos = generateTreePositions(elevation, biome, minTreeDistance);
+            config = getConfig(biome);
+            trees = treeStrings(config, treePos.size());
+            forest = makeForest(trees, config);
         }
         ImGui::PopItemWidth();  // Ripristina la larghezza predefinita
 
         // Aggiungi un box per impostare la distanza minima tra gli alberi
-     ImGui::InputFloat("Distanza Minima Alberi", &minTreeDistance, 0.1f, 1.0f, "%.2f");  // 0.1f è il passo minimo, 1.0f è il passo massimo// 0.1f è il passo minimo, 1.0f è il passo massimo
+        ImGui::InputFloat("Distanza Minima Alberi", &minTreeDistance, 0.1f, 1.0f, "%.2f");  // 0.1f è il passo minimo, 1.0f è il passo massimo// 0.1f è il passo minimo, 1.0f è il passo massimo
         ImGui::Text("Distanza attuale: %.2f", minTreeDistance);  // Mostra la distanza attuale
 
+        // Box per numero di iterazioni per la generazione degli alberi
+        ImGui::InputInt("Numero iterazioni", &config.production_iterations, 1, 1);
+        ImGui::Text("Numero di iterazioni eseguite: %d", config.production_iterations);
+
+        // Box per lunghezza moduli dell'albero
+        if (ImGui::InputFloat("Lunghezza moduli", &config.branch_length, 0.1f, 1.0f, "%.2f")) {
+            forest = makeForest(trees, config);
+        }
+
+        // Box per raggio moduli dell'albero
+        if (ImGui::InputFloat("Raggio moduli", &config.branch_radius, 0.05f, 1.0f, "%.2f")) {
+            forest = makeForest(trees, config);
+        }
+
+        // Box per risoluzione moduli dell'albero
+        if (ImGui::InputScalar("Risoluzione moduli", ImGuiDataType_U32, &config.resolution)) {
+            forest = makeForest(trees, config);
+        }
+
+        // Box per decidere grandezza foglia
+        if (ImGui::InputFloat("Lunghezza foglie", &config.leaf_size, 0.1f, 1.0f, "%.2f")) {
+            forest = makeForest(trees, config);
+        }
+
+        // Box per angolo rami
+        if (ImGui::InputFloat("Angolo rotazioni", &config.angle, 0.5f, 1.0f, "%.2f")) {
+            forest = makeForest(trees, config);
+        }
+
+        // Pulsante per ricaricare il bioma con impostazioni differenti
+        if (ImGui::Button("Ricarica Bioma", ImVec2(200, 20))) {
+            biome = static_cast<Biomes>(selectedIndex);
+            elevation = setElevation(biome, shader);
+            treePos = generateTreePositions(elevation, biome, minTreeDistance);
+            trees = treeStrings(config, treePos.size());
+            forest = makeForest(trees, config);
+        }
+        ImGui::SameLine();
+        // Pulsante per generare nuovi alberi nelle stesse posizioni
+        if (ImGui::Button("Ricarica Alberi", ImVec2(200, 20))) {
+            trees = treeStrings(config, treePos.size());
+            forest = makeForest(trees, config);
+        }
+        ImGui::SameLine();
+        // Pulsante per generare nuovi alberi in nuove posizioni
+        if (ImGui::Button("Genera Nuove Posizioni", ImVec2(200, 20))) {
+            treePos = generateTreePositions(elevation, biome, minTreeDistance);
+            trees = treeStrings(config, treePos.size());
+            forest = makeForest(trees, config);
+        }
+
         ImGui::End();
-
-
-
 
         // Inputs
         processInput(window);
@@ -205,7 +254,7 @@ int main() {
         t_shader.setVec3("viewPos", camera.position);
         t_shader.setVec3("light.ambient", 0.3f, 0.3f, 0.3f);
         t_shader.setVec3("light.diffuse", 0.7f, 0.7f, 0.7f);
-        t_shader.setFloat("alpha_discard", treeConfig.alpha_discard);
+        t_shader.setFloat("alpha_discard", config.alpha_discard);
 
         for (int i = 0; i < forest.size(); i++) {
             const float y = elevation.getHeight(treePos[i].x, treePos[i].y);
