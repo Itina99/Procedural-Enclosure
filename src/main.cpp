@@ -55,7 +55,7 @@ int main() {
 
     // setting callback to resize viewport when resizing window
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
 
     glfwSetScrollCallback(window, scroll_callback);
@@ -87,6 +87,9 @@ int main() {
     // Create a Noise generator
 
     auto biome = Biomes::ISLANDS;
+    constexpr const char* BiomeLabels[] = {
+        "Mountains", "Hills", "Desert", "Island"
+    };
 
     Mesh elevation = setElevation(biome, shader);
 
@@ -134,11 +137,24 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("Debug UI");
-        ImGui::Text("Hello, ImGui!");
-        static float f = 0.0f;
-        ImGui::SliderFloat("Float value", &f, 0.0f, 1.0f);
+
+        static int selectedIndex = static_cast<int>(biome); // currentBiome è un Biomes
+
+        ImGui::Begin("Bioma");
+
+        // Imposta una larghezza per la combo box, così da renderla più visibile
+        ImGui::PushItemWidth(200);  // Adatta la larghezza a 200px (puoi regolare questo valore come preferisci)
+
+        if (ImGui::Combo("Seleziona Bioma", &selectedIndex, BiomeLabels, 4)) {
+            biome = static_cast<Biomes>(selectedIndex);
+            elevation = setElevation(biome, shader);
+            std::tie(treePos, forest) = makeForest(elevation, biome);
+        }
+
+        ImGui::PopItemWidth();  // Ripristina la larghezza di default (opzionale)
+
         ImGui::End();
+
 
 
         // Inputs
@@ -229,6 +245,7 @@ int main() {
         }
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 
 
         // events and swap buffers

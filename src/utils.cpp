@@ -49,20 +49,28 @@ void processInput(GLFWwindow *window) {
     }
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
-    if (firstMouse) {
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        if (firstMouse) {
+            lastx = xpos;
+            lasty = ypos;
+            firstMouse = false;
+            return;
+        }
+
+        // Invertiti per comportamento drag-style
+        float xoffset = lastx - xpos;
+        float yoffset = ypos - lasty;
         lastx = xpos;
         lasty = ypos;
-        firstMouse = false;
-    }
-    // Mouse position calculation
-    float xoffset = xpos - lastx;
-    float yoffset = lasty - ypos; // reversed because coordinates are flipped
-    lastx = xpos;
-    lasty = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+        camera.ProcessMouseMovement(xoffset, yoffset);
+    } else {
+        firstMouse = true;
+    }
 }
+
+
 
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     camera.ProcessMouseScroll(yoffset);
@@ -324,7 +332,7 @@ Mesh setElevation(const Biomes biome, Shader shader) {
     return elevation;
 }
 
-std::tuple<std::vector<Point>, std::vector<Tree>> makeForest(Mesh elevation, Biomes biome) {
+auto makeForest(const Mesh elevation, Biomes biome) -> std::tuple<std::vector<Point>, std::vector<Tree> > {
     NoiseGenerator gen;
     const BiomeSettings biomeSettings = gen.biomePresets[biome];
     std::vector<Point> treePos = PoissonGenerator::generatePositions(elevation, 20, 20, 5.0f, 20, biomeSettings.id,
