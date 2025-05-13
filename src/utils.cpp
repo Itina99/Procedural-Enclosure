@@ -359,15 +359,14 @@ TreeConfig getConfig(Biomes biome) {
         {
             Biomes::HILLS, {
                 {
-                    {'P', std::map<std::string, float> {
-                      {"[&F[&&L]PF]/////[&F[&&L]P]///////[&F[&&L]P]", 0.5},
-                      {"[&F[&&L]P]/////////[&F[&&L]P]", 0.5}}},
+                    {'T', std::map<std::string, float> {
+                      {"[&F[&&L]TF]/////[&F[&&L]T]///////[&F[&&L]T]", 0.5},
+                      {"[&F[&&L]T]/////////[&F[&&L]T]", 0.5}}},
                     {'F', std::map<std::string, float> {
-                      {"X/////F", 0.2},
-                      {"XPF", 0.2},
-                      {"FF", 0.2},
-                      {"F", 0.2},
-                      {"FXP", 0.2}}},
+                      {"X/////F", 0.25},
+                      {"XTF", 0.25},
+                      {"F", 0.25},
+                      {"FXT", 0.25}}},
                     {'X', std::map<std::string, float> {{"F", 1.0}}}
                 },
                 "../textures/trees/Bark_007_SD/Bark_007_BaseColor.jpg",
@@ -391,24 +390,23 @@ TreeConfig getConfig(Biomes biome) {
                     {'F', std::map<std::string, float> {
                         {"F", 0.05},
                         {"FF", 0.6},
-                        {"FJ", 0.1},
-                        {"[B]F", 0.027},
-                        {"[/B]F", 0.027},
-                        {"[///B]F", 0.027},
-                        {"[/////B]F", 0.027},
-                        {"[///////B]F", 0.027},
-                        {"[(B]F", 0.027},
-                        {"[(((B]F", 0.027},
-                        {"[(((((B]F", 0.027},
-                        {"[(((((((B]F", 0.027}}
+                        {"[B]F", 0.037},
+                        {"[/B]F", 0.037},
+                        {"[///B]F", 0.037},
+                        {"[/////B]F", 0.037},
+                        {"[///////B]F", 0.037},
+                        {"[(B]F", 0.037},
+                        {"[(((B]F", 0.037},
+                        {"[(((((B]F", 0.037},
+                        {"[(((((((B]F", 0.037}}
                     },
-                    {'B', std::map<std::string, float> {{"!++++XJ----XF", 1.0}}}
+                    {'B', std::map<std::string, float> {{"!++++XJ----XFJ", 1.0}}}
                 },
                 "../textures/trees/cactus_0006_1k_8XvjS2/plants_0006_color_1k.jpg",
                 "../textures/trees/Leaves.png",
                 REGULAR,
-                1.0f,
-                0.4f,
+                1.4f,
+                0.6f,
                 1.0f,
                 0.9f,
                 0.9f,
@@ -416,7 +414,7 @@ TreeConfig getConfig(Biomes biome) {
                 0.9f,
                 22.5f,
                 16,
-                "XF"
+                "XFJ"
             }
         },
         {
