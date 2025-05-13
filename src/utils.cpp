@@ -360,25 +360,26 @@ TreeConfig getConfig(Biomes biome) {
             Biomes::HILLS, {
                 {
                     {'T', std::map<std::string, float> {
-                      {"[&F[&&L]TF]/////[&F[&&L]T]///////[&F[&&L]T]", 0.5},
-                      {"[&F[&&L]T]/////////[&F[&&L]T]", 0.5}}},
+                      {"[&&F[&&L]!T]/////[&&F[&&L]!T]///////[&&F[&&L]!T]", 0.25},
+                      {"[&F[&&L]!T]/////[&F[&&L]!T]///////[&F[&&L]!T]", 0.25},
+                      {"[&F[&&L]!T]/////////[&F[&&L]!T]", 0.5}}},
                     {'F', std::map<std::string, float> {
-                      {"X/////F", 0.25},
-                      {"XTF", 0.25},
+                      {"S/////F", 0.25},
+                      {"XT///F", 0.25},
                       {"F", 0.25},
-                      {"FXT", 0.25}}},
-                    {'X', std::map<std::string, float> {{"F", 1.0}}}
+                      {"F////XT", 0.25}}},
+                    {'S', std::map<std::string, float> {{"F[^^L]", 1.0}}}
                 },
                 "../textures/trees/Bark_007_SD/Bark_007_BaseColor.jpg",
                 "../textures/trees/Leaves.png",
                 REGULAR,
                 1.0f,
-                0.1f,
-                1.0f,
-                0.9f,
+                0.2f,
+                1.5f,
+                0.8f,
                 0.9f,
                 7,
-                0.9f,
+                0.85f,
                 22.5f,
                 16,
                 "XF"
