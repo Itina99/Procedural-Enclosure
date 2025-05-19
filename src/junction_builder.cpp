@@ -19,7 +19,7 @@ void Junction::build_junciton(float radius) {
     double phi_increment = glm::radians(90.0f / ((float)this->resolution/2.0f));
     double theta_increment = glm::radians(360.0f / (float)this->resolution);
 
-    for (int i = 0; i <= resolution; ++i) {
+    for (int i = 0; i <= resolution/2; ++i) {
         float phi = phi_increment * i;
         for (int j = 0; j <= resolution; ++j) {
             float theta = theta_increment * j;
