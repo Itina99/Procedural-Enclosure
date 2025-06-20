@@ -505,9 +505,6 @@ auto makeForest(std::vector<std::string> trees, const TreeConfig& config) -> std
     std::shared_ptr<Mesh> leaf_ptr = sLeaf->getResult();
     std::shared_ptr<Mesh> junc_ptr = sJunc->getResult();
 
-    sBranch->build_branch(0.5f * config.branch_length, config.branch_radius, 0);
-    std::shared_ptr<Mesh> end_ptr = sBranch->getResult();
-
     Interpreter turtle = Interpreter(config.angle, glm::vec3(0.0f), config.branch_radius, config.branch_length, config.radius_decay);
 
     std::vector<Tree> forest{};
@@ -518,7 +515,7 @@ auto makeForest(std::vector<std::string> trees, const TreeConfig& config) -> std
         std::vector<glm::mat4> transforms {};
 
         turtle.read_string(tree, models, transforms);
-        forest.emplace_back(transforms, models, branch_ptr, leaf_ptr, end_ptr, junc_ptr);
+        forest.emplace_back(transforms, models, branch_ptr, leaf_ptr, junc_ptr);
     }
 
     return forest;

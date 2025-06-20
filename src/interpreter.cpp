@@ -26,13 +26,6 @@ void Interpreter::read_string(const std::string &predicate, std::vector<char>& m
     glm::mat4 translation, rotation = glm::mat4(1.0f);
     for (char c : predicate) {
         switch (c) {
-            case 'P': {
-                translation = glm::translate(glm::mat4(1.0f), current.position);
-                rotation = glm::mat4_cast(current.orientation);
-                transforms.push_back(translation * rotation * current.scale_matrix);
-                models.push_back('P');
-                break;
-            }
             case 'J': {
                 translation = glm::translate(glm::mat4(1.0f), current.position);
                 rotation = glm::mat4_cast(current.orientation);
